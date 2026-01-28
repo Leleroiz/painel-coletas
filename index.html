@@ -3,350 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabLog - Sistema Unificado</title>
+    <title>LabLog v2 - Automatizado</title>
     <style>
-        :root {
-            --primary: #000;
-            --accent: #ffeb3b;
-            --coral: #FF7F50;
-            --lilas: #DCD0FF;
-            --bg: #f0f2f5;
-        }
-
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            background-color: var(--bg);
-            color: #333;
-        }
-
-        /* Navegação Superior */
-        nav {
-            background-color: var(--primary);
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        nav button {
-            background: transparent;
-            color: white;
-            border: 2px solid #444;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 900;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-
-        nav button.active {
-            background-color: var(--accent);
-            color: black;
-            border-color: var(--accent);
-        }
-
-        /* Container Principal */
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-
-        .view { display: none; animation: fadeIn 0.4s; }
-        .view.active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Estilo dos Cards */
-        .card {
-            background: white;
-            border: 5px solid var(--primary);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 10px 10px 0px var(--primary);
-            margin-bottom: 30px;
-        }
-
-        h2 { margin-top: 0; text-transform: uppercase; font-weight: 900; }
-
-        /* Formulários */
-        input, select {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0 20px 0;
-            border: 3px solid var(--primary);
-            border-radius: 12px;
-            font-size: 1.1rem;
-            box-sizing: border-box;
-            font-weight: bold;
-        }
-
-        .btn-main {
-            width: 100%;
-            padding: 20px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.2rem;
-            font-weight: 900;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: 0.2s;
-        }
-
-        .btn-main:active { transform: scale(0.98); }
-
-        /* Dashboard de Monitoramento */
-        .grid-monitor {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .card-pendencia {
-            background: white;
-            border: 4px solid var(--primary);
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 6px 6px 0px var(--primary);
-        }
-
-        .setor-header {
-            padding: 10px;
-            text-align: center;
-            font-weight: 900;
-            border-bottom: 4px solid var(--primary);
-        }
-
-        .card-body { padding: 15px; }
-        .card-id { font-size: 1.8rem; font-weight: 900; display: block; }
-        .card-tempo { color: var(--danger); font-weight: bold; font-size: 0.9rem; margin-top: 10px; display: block; }
-
-        /* Câmera */
-        #video-container {
-            width: 100%;
-            position: relative;
-            background: #000;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 15px;
-            border: 4px solid var(--primary);
-        }
-
-        video { width: 100%; display: block; }
-
-        #preview-foto {
-            width: 100%;
-            border-radius: 15px;
-            border: 4px solid var(--primary);
-            display: none;
-            margin-bottom: 15px;
-        }
-
-        .loading { opacity: 0.5; pointer-events: none; }
-
+        /* Mantendo seu estilo Visual de bordas grossas */
+        :root { --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); }
+        nav { background: var(--primary); padding: 15px; display: flex; justify-content: center; gap: 10px; position: sticky; top:0; z-index:100; }
+        nav button { background: none; border: 2px solid #444; color: white; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        nav button.active { background: var(--accent); color: #000; border-color: var(--accent); }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .card { background: white; border: 4px solid #000; border-radius: 20px; padding: 25px; box-shadow: 10px 10px 0px #000; margin-bottom: 20px; }
+        .view { display: none; } .view.active { display: block; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 3px solid #000; border-radius: 10px; box-sizing: border-box; font-size: 1.1rem; font-weight: bold; }
+        .btn-main { width: 100%; padding: 20px; background: #000; color: #fff; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        .badge-setor { display: inline-block; padding: 5px 15px; border-radius: 50px; background: #eee; border: 2px solid #000; font-size: 0.8rem; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <nav>
-    <button onclick="changeView('v-dash')" id="btn-v-dash" class="active">📊 Monitor</button>
-    <button onclick="changeView('v-atend')" id="btn-v-atend">📞 Atendimento</button>
-    <button onclick="changeView('v-exp')" id="btn-v-exp">📦 Expedição</button>
+    <button onclick="changeView('v-dash')" id="btn-v-dash" class="active">📺 MONITOR</button>
+    <button onclick="changeView('v-atend')" id="btn-v-atend">📞 ATENDIMENTO</button>
+    <button onclick="changeView('v-exp')" id="btn-v-exp">📦 EXPEDIÇÃO</button>
 </nav>
 
 <div class="container">
 
     <div id="v-dash" class="view active">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>Coletas Pendentes</h2>
-            <div id="status-sync" style="font-size: 0.8rem; font-weight: bold;">Atualizado agora</div>
-        </div>
-        <div id="grid-monitor" class="grid-monitor">
-            <p>Carregando pendências...</p>
-        </div>
+        <h2>Coletas em Rota</h2>
+        <div id="grid-monitor">Carregando...</div>
     </div>
 
     <div id="v-atend" class="view">
         <div class="card">
             <h2>Solicitar Coleta</h2>
-            <label>Código do Cliente:</label>
-            <input type="text" id="at-cod" placeholder="Digite o código">
-            
-            <label>Setor:</label>
-            <select id="at-setor">
-                <option value="Coral">Setor Coral</option>
-                <option value="Lilas">Setor Lilás</option>
-                <option value="Bege">Setor Bege</option>
-                <option value="Amarelo">Setor Amarelo</option>
-            </select>
-
-            <button class="btn-main" id="btn-solicitar" onclick="enviarSolicitacao()">Registrar Solicitação</button>
+            <p style="font-size: 0.9rem; color: #666;">O setor será preenchido automaticamente pelo sistema.</p>
+            <input type="text" id="at-cod" placeholder="Código do Cliente">
+            <button class="btn-main" onclick="enviarSolicitacao()">Lançar no Painel</button>
         </div>
     </div>
 
     <div id="v-exp" class="view">
         <div class="card">
-            <h2>Recebimento de Malote</h2>
-            <input type="text" id="exp-cod" placeholder="Bipar Código ou ID do Pedido">
+            <h2>Recebimento e Vínculo</h2>
+            <input type="text" id="exp-cod-cliente" placeholder="Código do Cliente (Malote)">
+            <input type="text" id="exp-id-pedido" placeholder="Bipar ID do Pedido">
             
-            <div id="video-container">
-                <video id="webcam" autoplay playsinline></video>
+            <div id="camera-box" style="margin-bottom: 15px; border: 3px solid #000; border-radius: 10px; overflow: hidden;">
+                <video id="webcam" autoplay playsinline style="width: 100%;"></video>
             </div>
             
-            <img id="preview-foto">
-            
+            <button class="btn-main" style="background: #2196F3;" onclick="vincularEReceber()">📸 Vincular e Finalizar</button>
             <canvas id="canvas" style="display:none;"></canvas>
-            
-            <button class="btn-main" style="background-color: #2196F3;" id="btn-foto" onclick="capturarFoto()">📸 Tirar Foto e Receber</button>
-            <button class="btn-main" style="display:none; background-color: #666; margin-top: 10px;" id="btn-retry" onclick="resetExpedicao()">🔄 Tentar Novamente</button>
         </div>
     </div>
 
 </div>
 
 <script>
-    // --- CONFIGURAÇÃO ---
-    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
+    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; // COLOQUE SUA URL AQUI
 
-    // Troca de abas
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.getElementById('btn-' + id).classList.add('active');
-        
         if(id === 'v-exp') startCamera();
         if(id === 'v-dash') carregarPendencias();
     }
 
-    // --- LOGICA ATENDIMENTO ---
     async function enviarSolicitacao() {
         const cod = document.getElementById('at-cod').value;
-        const setor = document.getElementById('at-setor').value;
-        if(!cod) return alert("Digite o código do cliente!");
-
-        const btn = document.getElementById('btn-solicitar');
-        btn.classList.add('loading');
-        btn.innerText = "Enviando...";
-
-        try {
-            await fetch(URL_WEB_APP, {
-                method: "POST",
-                mode: 'no-cors', // Necessário para Google Apps Script
-                body: JSON.stringify({ action: "solicitar", codCliente: cod, setor: setor })
-            });
-            alert("Coleta solicitada!");
-            document.getElementById('at-cod').value = "";
-        } catch (e) { alert("Erro ao enviar"); }
+        if(!cod) return alert("Digite o código!");
         
-        btn.classList.remove('loading');
-        btn.innerText = "Registrar Solicitação";
+        await fetch(URL_WEB_APP, {
+            method: "POST",
+            mode: 'no-cors',
+            body: JSON.stringify({ action: "solicitar", codCliente: cod })
+        });
+        alert("Solicitação enviada!");
+        document.getElementById('at-cod').value = "";
     }
 
-    // --- LOGICA EXPEDIÇÃO (CAMERA) ---
-    let stream;
     async function startCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            document.getElementById('webcam').srcObject = stream;
-        } catch (e) { alert("Câmera não disponível"); }
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        document.getElementById('webcam').srcObject = stream;
     }
 
-    async function capturarFoto() {
-        const video = document.getElementById('webcam');
+    async function vincularEReceber() {
+        const codCli = document.getElementById('exp-cod-cliente').value;
+        const idPed = document.getElementById('exp-id-pedido').value;
+        if(!codCli || !idPed) return alert("Preencha o Cliente e o Pedido!");
+
         const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
-        const cod = document.getElementById('exp-cod').value;
+        const video = document.getElementById('webcam');
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const foto = canvas.toDataURL('image/jpeg', 0.5);
 
-        if(!cod) return alert("Bipe o código antes!");
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const fotoBase64 = canvas.toDataURL('image/jpeg', 0.5);
-        
-        // UI
-        document.getElementById('webcam').style.display = 'none';
-        const img = document.getElementById('preview-foto');
-        img.src = fotoBase64;
-        img.style.display = 'block';
-        document.getElementById('btn-foto').style.display = 'none';
-        document.getElementById('btn-retry').style.display = 'block';
-
-        // Enviar
-        const btnRetry = document.getElementById('btn-retry');
-        btnRetry.innerText = "Enviando Dados...";
-
-        try {
-            await fetch(URL_WEB_APP, {
-                method: "POST",
-                mode: 'no-cors',
-                body: JSON.stringify({ action: "receber", codOuId: cod, foto: fotoBase64 })
-            });
-            alert("Recebimento concluído!");
-            resetExpedicao();
-        } catch (e) { alert("Erro ao salvar"); }
+        await fetch(URL_WEB_APP, {
+            method: "POST", mode: 'no-cors',
+            body: JSON.stringify({ 
+                action: "vincular_pedido", 
+                codCliente: codCli, 
+                idPedido: idPed,
+                foto: foto 
+            })
+        });
+        alert("Pedido vinculado e Malote recebido!");
+        document.getElementById('exp-id-pedido').value = ""; // Limpa para o próximo ID
     }
 
-    function resetExpedicao() {
-        document.getElementById('webcam').style.display = 'block';
-        document.getElementById('preview-foto').style.display = 'none';
-        document.getElementById('btn-foto').style.display = 'block';
-        document.getElementById('btn-retry').style.display = 'none';
-        document.getElementById('btn-retry').innerText = "🔄 Tentar Novamente";
-        document.getElementById('exp-cod').value = "";
-    }
-
-    // --- LOGICA DASHBOARD ---
     async function carregarPendencias() {
-        try {
-            const res = await fetch(URL_WEB_APP);
-            const data = await res.json();
-            const grid = document.getElementById('grid-monitor');
-            grid.innerHTML = "";
-
-            if(data.length <= 1) { // Apenas cabeçalho
-                grid.innerHTML = "<p>✅ Nenhuma coleta pendente!</p>";
-                return;
-            }
-
-            data.forEach((row, i) => {
-                if(i === 0) return; // Pula cabeçalho
-                
-                // Colunas: ID_SOL, DATA, COD, SETOR, STATUS
-                const corSetor = row[3] === "Coral" ? "var(--coral)" : row[3] === "Lilas" ? "var(--lilas)" : "#eee";
-                
-                const card = document.createElement('div');
-                card.className = "card-pendencia";
-                card.innerHTML = `
-                    <div class="setor-header" style="background:${corSetor}">${row[3]}</div>
-                    <div class="card-body">
-                        <span class="card-id">Cód: ${row[2]}</span>
-                        <span class="card-tempo">Solicitado em: ${new Date(row[1]).toLocaleTimeString()}</span>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-            document.getElementById('status-sync').innerText = "Sincronizado: " + new Date().toLocaleTimeString();
-        } catch (e) { console.error("Erro dashboard", e); }
+        const res = await fetch(URL_WEB_APP);
+        const data = await res.json();
+        const grid = document.getElementById('grid-monitor');
+        grid.innerHTML = "";
+        data.forEach((row, i) => {
+            if(i === 0) return;
+            grid.innerHTML += `
+                <div class="card" style="padding: 15px; border-width: 3px;">
+                    <strong style="font-size: 1.2rem;">Cod: ${row[2]}</strong><br>
+                    <span class="badge-setor">${row[3]}</span>
+                </div>`;
+        });
     }
 
-    // Auto-atualiza o monitor a cada 30 seg
-    setInterval(() => {
-        if(document.getElementById('v-dash').classList.contains('active')) carregarPendencias();
-    }, 30000);
-
-    // Inicia carregando o dashboard
     carregarPendencias();
-
 </script>
 </body>
 </html>
