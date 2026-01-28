@@ -14,8 +14,10 @@
         nav { background: var(--primary); padding: 15px; display: none; justify-content: center; gap: 10px; position: sticky; top: 0; z-index: 1000; }
         nav button { background: none; border: 2px solid #444; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         nav button.active { background: var(--accent); color: #000; }
+        .btn-planilha { background: #2e7d32 !important; border-color: #1b5e20 !important; display: none; }
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .view { display: none; } .view.active { display: block; }
+        .view.active { display: block; }
         .card { background: white; border: 3px solid #000; border-radius: 15px; padding: 20px; box-shadow: 8px 8px 0px #000; margin-bottom: 20px; }
         
         /* FILTROS */
@@ -47,9 +49,10 @@
 </div>
 
 <nav id="main-nav">
-    <button onclick="changeView('v-dash')" id="btn-v-dash">Monitor</button>
-    <button onclick="changeView('v-atend')" id="btn-v-atend">Atendimento</button>
-    <button onclick="changeView('v-exp')" id="btn-v-exp">Expedição</button>
+    <button onclick="changeView('v-dash')" id="btn-v-dash">Monitor 🖥</button>
+    <button onclick="changeView('v-atend')" id="btn-v-atend">Atendimento 📞</button>
+    <button onclick="changeView('v-exp')" id="btn-v-exp">Expedição 🛵</button>
+    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2025386638#gid=2025386638', '_blank')" id="btn-planilha-adm" class="btn-planilha">📊 Colar Relatório</button>
 </nav>
 
 <div class="container">
@@ -173,3 +176,4 @@
 </script>
 </body>
 </html>
+
