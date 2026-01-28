@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabLog - Automatizado</title>
+    <title>LabLog v2 - Automatizado</title>
     <style>
         /* Mantendo seu estilo Visual de bordas grossas */
         :root { --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; }
@@ -25,7 +25,25 @@
     <button onclick="changeView('v-dash')" id="btn-v-dash" class="active">📺 MONITOR</button>
     <button onclick="changeView('v-atend')" id="btn-v-atend">📞 ATENDIMENTO</button>
     <button onclick="changeView('v-exp')" id="btn-v-exp">📦 EXPEDIÇÃO</button>
+    <button onclick="window.open('URL_DA_SUA_PLANILHA', '_blank')" style="background: #2e7d32;">📊 ATUALIZAR RELATÓRIO</button>
 </nav>
+
+<div id="v-exp" class="view">
+    <div class="card">
+        <h2>Recebimento Rápido</h2>
+        <p style="font-size: 0.8rem; color: #666;">Bipe o ID. O sistema associará ao cliente automaticamente via relatório.</p>
+        
+        <input type="text" id="exp-id-pedido" placeholder="BIPAR ID DO PEDIDO">
+        
+        <input type="text" id="exp-cod-cliente" placeholder="Cód. Cliente (opcional se ID constar no relatório)" style="border-color: #ccc; font-size: 0.9rem;">
+
+        <div id="camera-box" style="margin-bottom: 15px; border: 3px solid #000; border-radius: 10px; overflow: hidden;">
+            <video id="webcam" autoplay playsinline style="width: 100%;"></video>
+        </div>
+        
+        <button class="btn-main" style="background: #2196F3;" onclick="vincularEReceber()">📸 Bipar e Fotografar</button>
+    </div>
+</div>
 
 <div class="container">
 
@@ -133,4 +151,3 @@
 </script>
 </body>
 </html>
-
