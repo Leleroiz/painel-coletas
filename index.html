@@ -3,32 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabLog - Sistema Unificado</title>
+    <title>LabLog - Inteligente</title>
     <style>
         :root { --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; --coral: #FF7F50; --lilas: #DCD0FF; --bege: #F5F5DC; --amarelo: #FFD700; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #333; }
-        
-        /* Navegação */
         nav { background: var(--primary); padding: 15px; display: flex; justify-content: center; gap: 10px; position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
         nav button { background: none; border: 2px solid #444; color: white; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
         nav button.active { background: var(--accent); color: #000; border-color: var(--accent); }
         .btn-planilha { background: #2e7d32 !important; border-color: #1b5e20 !important; }
-
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .card { background: white; border: 4px solid #000; border-radius: 20px; padding: 25px; box-shadow: 10px 10px 0px #000; margin-bottom: 20px; }
-        .view { display: none; animation: fadeIn 0.3s; }
-        .view.active { display: block; }
-
-        /* Dashboard */
-        .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card-pendencia { background: #fff; border: 3px solid #000; border-radius: 15px; overflow: hidden; box-shadow: 5px 5px 0px #000; }
-        .setor-tag { padding: 8px; text-align: center; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; border-bottom: 3px solid #000; }
-        .info-pendencia { padding: 15px; }
-
-        /* Formulários */
+        .view { display: none; } .view.active { display: block; }
         input { width: 100%; padding: 15px; margin: 10px 0; border: 3px solid #000; border-radius: 12px; box-sizing: border-box; font-size: 1.1rem; font-weight: bold; }
         .btn-main { width: 100%; padding: 20px; background: #000; color: #fff; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
-        
+        .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card-pendencia { background: #fff; border: 3px solid #000; border-radius: 15px; overflow: hidden; box-shadow: 5px 5px 0px #000; animation: fadeIn 0.3s; }
+        .setor-tag { padding: 8px; text-align: center; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; border-bottom: 3px solid #000; }
+        .info-pendencia { padding: 15px; }
         video { width: 100%; border-radius: 12px; border: 3px solid #000; background: #000; margin-bottom: 10px; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -39,7 +30,7 @@
     <button onclick="changeView('v-dash')" id="btn-v-dash" class="active">📺 Monitor</button>
     <button onclick="changeView('v-atend')" id="btn-v-atend">📞 Atendimento</button>
     <button onclick="changeView('v-exp')" id="btn-v-exp">📦 Expedição</button>
-    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2036976699#gid=2036976699', '_blank')" class="btn-planilha">📊 Atualizar Relatório</button>
+    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2036976699#gid=2036976699', '_blank')" class="btn-planilha">📊 Colar Relatório</button>
 </nav>
 
 <div class="container">
@@ -47,7 +38,7 @@
     <div id="v-dash" class="view active">
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2>Coletas Pendentes</h2>
-            <button onclick="carregarPendencias()" style="padding: 5px 10px; cursor: pointer;">🔄 Atualizar</button>
+            <button onclick="carregarPendencias()" style="padding: 5px 10px; cursor: pointer; border-radius: 5px; border: 2px solid #000;">🔄 Atualizar</button>
         </div>
         <div id="grid-monitor" class="grid-monitor">Carregando painel...</div>
     </div>
@@ -64,8 +55,9 @@
     <div id="v-exp" class="view">
         <div class="card">
             <h2>Recebimento de Malote</h2>
-            <input type="text" id="exp-id-pedido" placeholder="BIPAR ID DO PEDIDO (Obrigatório)">
-            <input type="number" id="exp-cod-cliente" placeholder="Cód. Cliente (Opcional)">
+            <p style="font-size: 0.8rem; margin-bottom: 5px;">Bipe o ID. O sistema buscará o código do cliente no relatório.</p>
+            <input type="text" id="exp-id-pedido" placeholder="BIPAR ID DO PEDIDO">
+            <input type="number" id="exp-cod-cliente" placeholder="Cód. Cliente (Apenas se ID não estiver no relatório)">
             
             <video id="webcam" autoplay playsinline></video>
             <canvas id="canvas" style="display:none;"></canvas>
@@ -77,88 +69,70 @@
 </div>
 
 <script>
-    // --- IMPORTANTE: COLOQUE SUA URL DO WEB APP AQUI ---
-    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec";
+    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; // <--- COLOQUE A URL DO WEB APP AQUI
 
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.getElementById('btn-' + id).classList.add('active');
-        
         if(id === 'v-exp') startCamera();
         if(id === 'v-dash') carregarPendencias();
     }
 
-    // Monitor
     async function carregarPendencias() {
         const grid = document.getElementById('grid-monitor');
         try {
             const res = await fetch(URL_WEB_APP);
             const data = await res.json();
             grid.innerHTML = "";
-
             if(data.length <= 1) {
-                grid.innerHTML = "<h3>✅ Nenhuma coleta pendente no momento.</h3>";
+                grid.innerHTML = "<h3>✅ Nenhuma coleta pendente.</h3>";
                 return;
             }
-
             data.forEach((row, i) => {
                 if(i === 0) return;
-                const setor = row[3] || "GERAL";
-                const cor = setor.toUpperCase().includes("CORAL") ? "var(--coral)" : 
-                            setor.toUpperCase().includes("LILAS") ? "var(--lilas)" :
-                            setor.toUpperCase().includes("BEGE") ? "var(--bege)" :
-                            setor.toUpperCase().includes("AMARELO") ? "var(--amarelo)" : "#eee";
+                const setor = (row[3] || "GERAL").toUpperCase();
+                const cor = setor.includes("CORAL") ? "var(--coral)" : 
+                            setor.includes("LILAS") ? "var(--lilas)" :
+                            setor.includes("BEGE") ? "var(--bege)" :
+                            setor.includes("AMARELO") ? "var(--amarelo)" : "#eee";
 
                 grid.innerHTML += `
                     <div class="card-pendencia">
                         <div class="setor-tag" style="background:${cor}">${setor}</div>
                         <div class="info-pendencia">
                             <span style="font-size:1.4rem; font-weight:900;">Cód: ${row[2]}</span><br>
-                            <small>Solicitado às: ${new Date(row[1]).toLocaleTimeString()}</small>
+                            <small>Solicitado: ${new Date(row[1]).toLocaleTimeString()}</small>
                         </div>
                     </div>`;
             });
-        } catch (e) {
-            grid.innerHTML = "<p>Erro ao carregar dados. Verifique a URL do Web App.</p>";
-        }
+        } catch (e) { grid.innerHTML = "<p>Erro na conexão.</p>"; }
     }
 
-    // Atendimento
     async function enviarSolicitacao() {
         const cod = document.getElementById('at-cod').value;
         if(!cod) return alert("Digite o código!");
-        
         document.getElementById('btn-sol').innerText = "Enviando...";
-        await fetch(URL_WEB_APP, {
-            method: "POST",
-            mode: 'no-cors',
-            body: JSON.stringify({ action: "solicitar", codCliente: cod })
-        });
-        
+        await fetch(URL_WEB_APP, { method: "POST", mode: 'no-cors', body: JSON.stringify({ action: "solicitar", codCliente: cod }) });
         alert("Solicitação registrada!");
         document.getElementById('at-cod').value = "";
         document.getElementById('btn-sol').innerText = "Registrar Solicitação";
         carregarPendencias();
     }
 
-    // Câmera
     async function startCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            document.getElementById('webcam').srcObject = stream;
-        } catch (e) { console.log("Erro câmera", e); }
+        try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        document.getElementById('webcam').srcObject = stream; } catch (e) {}
     }
 
-    // Expedição
     async function vincularEReceber() {
         const idPed = document.getElementById('exp-id-pedido').value;
         const codCli = document.getElementById('exp-cod-cliente').value;
-        if(!idPed) return alert("Bipe o ID do pedido!");
-
+        if(!idPed) return alert("Bipe o ID!");
         const btn = document.getElementById('btn-exp');
-        btn.innerText = "Processando...";
+        btn.innerText = "Sincronizando...";
+        btn.style.background = "#666";
 
         const canvas = document.getElementById('canvas');
         const video = document.getElementById('webcam');
@@ -166,26 +140,18 @@
         canvas.getContext('2d').drawImage(video, 0, 0);
         const foto = canvas.toDataURL('image/jpeg', 0.5);
 
-        await fetch(URL_WEB_APP, {
-            method: "POST",
-            mode: 'no-cors',
-            body: JSON.stringify({ 
-                action: "vincular_pedido", 
-                idPedido: idPed,
-                codCliente: codCli,
-                foto: foto 
-            })
+        await fetch(URL_WEB_APP, { method: "POST", mode: 'no-cors', 
+            body: JSON.stringify({ action: "vincular_pedido", idPedido: idPed, codCliente: codCli, foto: foto }) 
         });
 
-        alert("Recebimento concluído!");
+        alert("Recebido com sucesso!");
         document.getElementById('exp-id-pedido').value = "";
         btn.innerText = "📸 Bipar e Fotografar";
+        btn.style.background = "#2196F3";
     }
 
-    // Iniciar
     carregarPendencias();
-    setInterval(carregarPendencias, 60000); // Atualiza a cada 1 min
+    setInterval(carregarPendencias, 60000);
 </script>
-
 </body>
 </html>
