@@ -49,7 +49,7 @@
     <button onclick="changeView('v-dash')" id="btn-v-dash" class="active">📺 Monitor</button>
     <button onclick="changeView('v-atend')" id="btn-v-atend">📞 Atendimento</button>
     <button onclick="changeView('v-exp')" id="btn-v-exp">📦 Expedição</button>
-    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2036976699#gid=2036976699', '_blank')" class="btn-planilha">📊 Colar Relatório</button>
+    <button onclick="window.open('COLE_AQUI_O_LINK_DA_SUA_PLANILHA', '_blank')" class="btn-planilha">📊 Colar Relatório</button>
 </nav>
 
 <div class="container">
@@ -88,7 +88,7 @@
 
 <script>
     // --- COLE SUA URL DO WEB APP AQUI ---
-    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec";
+    const URL_WEB_APP = "COLE_AQUI_SUA_URL_DO_APPS_SCRIPT";
 
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -133,4 +133,56 @@
                         <div class="setor-tag" style="background:${corSetor}">${setor}</div>
                         <div class="info-pendencia">
                             <span style="font-size:1.4rem; font-weight:900;">Cód: ${row[2]}</span><br>
-                            <small
+                            <small>📅 ${dataSolicitacao.toLocaleDateString('pt-BR')}</small><br>
+                            <small>⏰ ${dataSolicitacao.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</small>
+                        </div>
+                    </div>`;
+            });
+        } catch (e) { grid.innerHTML = "<p>Erro ao conectar com a planilha.</p>"; }
+    }
+
+    async function enviarSolicitacao() {
+        const cod = document.getElementById('at-cod').value;
+        if(!cod) return alert("Digite o código!");
+        document.getElementById('btn-sol').innerText = "Enviando...";
+        await fetch(URL_WEB_APP, { method: "POST", mode: 'no-cors', body: JSON.stringify({ action: "solicitar", codCliente: cod }) });
+        alert("Solicitado!");
+        document.getElementById('at-cod').value = "";
+        document.getElementById('btn-sol').innerText = "Lançar no Painel";
+        carregarPendencias();
+    }
+
+    async function startCamera() {
+        try { const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        document.getElementById('webcam').srcObject = s; } catch (e) { console.log(e); }
+    }
+
+    async function vincularEReceber() {
+        const idPed = document.getElementById('exp-id-pedido').value;
+        const codCli = document.getElementById('exp-cod-cliente').value;
+        if(!idPed) return alert("Bipe o ID do pedido!");
+
+        const btn = document.getElementById('btn-exp');
+        btn.innerText = "Sincronizando...";
+
+        const canvas = document.getElementById('canvas');
+        const video = document.getElementById('webcam');
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const foto = canvas.toDataURL('image/jpeg', 0.5);
+
+        await fetch(URL_WEB_APP, { method: "POST", mode: 'no-cors', 
+            body: JSON.stringify({ action: "vincular_pedido", idPedido: idPed, codCliente: codCli, foto: foto }) 
+        });
+
+        alert("Recebimento Concluído!");
+        document.getElementById('exp-id-pedido').value = "";
+        btn.innerText = "📸 Bipar e Fotografar";
+    }
+
+    // Inicia e atualiza sozinho a cada 1 minuto
+    carregarPendencias();
+    setInterval(carregarPendencias, 60000);
+</script>
+</body>
+</html>
