@@ -10,148 +10,166 @@
             --coral: #FF7F50; --lilas: #DCD0FF; --bege: #F5F5DC; --amarelo: #FFD700; --rosa: #FFB6C1;
         }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); }
-        
-        /* LOGIN */
         #login-screen { position: fixed; inset: 0; background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        
-        /* NAV */
         nav { background: var(--primary); padding: 15px; display: none; justify-content: center; gap: 10px; position: sticky; top: 0; z-index: 1000; }
-        nav button { background: none; border: 2px solid #444; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        nav button.active { background: var(--accent); color: #000; border-color: var(--accent); }
-        .btn-planilha { background: #2e7d32 !important; display: none; } /* Escondido por padrão */
-
+        nav button { background: none; border: 2px solid #444; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        nav button.active { background: var(--accent); color: #000; }
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
-        .card { background: white; border: 4px solid #000; border-radius: 20px; padding: 25px; box-shadow: 10px 10px 0px #000; margin-bottom: 20px; }
         .view { display: none; } .view.active { display: block; }
-
+        .card { background: white; border: 3px solid #000; border-radius: 15px; padding: 20px; box-shadow: 8px 8px 0px #000; margin-bottom: 20px; }
+        
         /* FILTROS */
-        .filter-bar { margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-        .filter-btn { padding: 8px 12px; border: 2px solid #000; border-radius: 15px; cursor: pointer; font-weight: bold; background: #fff; font-size: 0.8rem; }
-        .filter-btn.active { background: var(--primary); color: #fff; }
+        .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; }
+        .filter-btn { padding: 8px 12px; border: 2px solid #000; border-radius: 10px; cursor: pointer; background: #fff; font-weight: bold; }
+        .filter-btn.active { background: #000; color: #fff; }
 
-        /* CARDS DO MONITOR */
-        .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .card-pendencia { background: #fff; border: 3px solid #000; border-radius: 15px; overflow: hidden; box-shadow: 5px 5px 0px #000; }
-        .setor-tag { padding: 8px; text-align: center; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; border-bottom: 3px solid #000; }
+        /* CORES DOS CARDS */
+        .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .card-p { border: 3px solid #000; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 4px 4px 0px #000; }
+        .tag { padding: 8px; text-align: center; font-weight: bold; border-bottom: 2px solid #000; text-transform: uppercase; }
         
-        /* CORES DOS SETORES */
-        .tag-coral { background: var(--coral); }
-        .tag-lilas { background: var(--lilas); }
-        .tag-bege { background: var(--bege); }
-        .tag-amarelo { background: var(--amarelo); }
-        .tag-rosa { background: var(--rosa); }
+        .c-coral { background: var(--coral); } .c-lilas { background: var(--lilas); }
+        .c-bege { background: var(--bege); } .c-amarelo { background: var(--amarelo); } .c-rosa { background: var(--rosa); }
 
-        @keyframes flash-red { 0%, 100% { background: #fff; } 50% { background: #ffcccc; } }
-        .atrasado { animation: flash-red 1.5s infinite; }
-        
-        .btn-main { width: 100%; padding: 15px; background: #000; color: #fff; border-radius: 10px; font-weight: 900; cursor: pointer; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #000; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="card" style="width: 300px;">
-        <h2 style="text-align:center">🔐 LOGIN</h2>
-        <input type="text" id="user" placeholder="Usuário" style="width:100%; padding:10px; margin-bottom:10px;">
-        <input type="password" id="pass" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:10px;">
-        <button class="btn-main" onclick="fazerLogin()">ENTRAR</button>
+    <div class="card" style="width: 280px;">
+        <h3 style="text-align:center">LOGIN LABLOG</h3>
+        <input type="text" id="user" placeholder="Usuário">
+        <input type="password" id="pass" placeholder="Senha">
+        <button class="btn" onclick="fazerLogin()">ENTRAR</button>
     </div>
 </div>
 
 <nav id="main-nav">
-    <button onclick="changeView('v-dash')" id="btn-v-dash" class="active">📺 Monitor</button>
-    <button onclick="changeView('v-atend')" id="btn-v-atend">📞 Atendimento</button>
-    <button onclick="changeView('v-exp')" id="btn-v-exp">📦 Expedição</button>
-    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2025386638#gid=2025386638', '_blank')" id="btn-adm-planilha" class="btn-planilha">📊 Colar Relatório</button>
+    <button onclick="changeView('v-dash')" id="btn-v-dash">Monitor</button>
+    <button onclick="changeView('v-atend')" id="btn-v-atend">Atendimento</button>
+    <button onclick="changeView('v-exp')" id="btn-v-exp">Expedição</button>
 </nav>
 
 <div class="container">
     <div id="v-dash" class="view">
         <div class="filter-bar">
-            <div class="filter-btn active" onclick="filtrarSetor('TODOS', this)">TODOS</div>
-            <div class="filter-btn" onclick="filtrarSetor('CORAL', this)">CORAL</div>
-            <div class="filter-btn" onclick="filtrarSetor('LILÁS', this)">LILÁS</div>
-            <div class="filter-btn" onclick="filtrarSetor('BEGE', this)">BEGE</div>
-            <div class="filter-btn" onclick="filtrarSetor('AMARELO', this)">AMARELO</div>
-            <div class="filter-btn" onclick="filtrarSetor('ROSA', this)">ROSA</div>
+            <button class="filter-btn active" onclick="filtrar('TODOS', this)">TODOS</button>
+            <button class="filter-btn" onclick="filtrar('CORAL', this)">CORAL</button>
+            <button class="filter-btn" onclick="filtrar('LILAS', this)">LILÁS</button>
+            <button class="filter-btn" onclick="filtrar('BEGE', this)">BEGE</button>
+            <button class="filter-btn" onclick="filtrar('AMARELO', this)">AMARELO</button>
+            <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
         </div>
-        <div id="grid-monitor" class="grid-monitor"></div>
-    </div>
+        <div id="grid" class="grid-monitor"></div>
     </div>
 
+    <div id="v-atend" class="view">
+        <div class="card">
+            <h2>Atendimento</h2>
+            <input type="number" id="at-cod" placeholder="Código do Cliente">
+            <button class="btn" onclick="enviarAtend()">Solicitar Coleta</button>
+        </div>
+    </div>
+
+    <div id="v-exp" class="view">
+        <div class="card">
+            <h2>Expedição</h2>
+            <input type="text" id="exp-id" placeholder="ID do Pedido">
+            <video id="vid" autoplay playsinline style="width:100%; border-radius:10px;"></video>
+            <canvas id="canv" style="display:none"></canvas>
+            <button class="btn" style="background:#2196F3" onclick="vincularExp()">📸 Confirmar</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec";
-    let setorFiltrado = "TODOS";
-    let dadosCache = [];
+    const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; // <--- COLOQUE SUA URL AQUI
+    let dados = [];
+    let fAtual = "TODOS";
 
     async function fazerLogin() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
-        
-        const resp = await fetch(URL_WEB_APP, {
-            method: 'POST',
-            body: JSON.stringify({action: 'login', user: u, pass: p})
-        });
-        const res = await resp.json();
-
+        const r = await fetch(URL, {method:'POST', body: JSON.stringify({action:'login', user:u, pass:p})});
+        const res = await r.json();
         if(res.sucesso) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-nav').style.display = 'flex';
-            if(res.nivel === 'ADMIN') document.getElementById('btn-adm-planilha').style.display = 'block';
+            document.getElementById('login-screen').style.display='none';
+            document.getElementById('main-nav').style.display='flex';
             changeView('v-dash');
-        } else {
-            alert("Usuário ou senha incorretos!");
-        }
-    }
-
-    function renderizarCards() {
-        const grid = document.getElementById('grid-monitor');
-        grid.innerHTML = "";
-        
-        dadosCache.forEach((row, i) => {
-            if(i === 0) return;
-            const setor = (row[3] || "GERAL").toUpperCase();
-            if(setorFiltrado !== "TODOS" && !setor.includes(setorFiltrado)) return;
-
-            // Define a classe de cor baseada no nome do setor
-            let corClasse = "tag-coral"; 
-            if(setor.includes("LILAS") || setor.includes("LILÁS")) corClasse = "tag-lilas";
-            if(setor.includes("BEGE")) corClasse = "tag-bege";
-            if(setor.includes("AMARELO")) corClasse = "tag-amarelo";
-            if(setor.includes("ROSA")) corClasse = "tag-rosa";
-
-            grid.innerHTML += `
-                <div class="card-pendencia">
-                    <div class="setor-tag ${corClasse}">${setor}</div>
-                    <div style="padding:15px">
-                        <span style="font-size:1.2rem; font-weight:bold;">Cód: ${row[2]}</span><br>
-                        <small>📅 ${new Date(row[1]).toLocaleDateString()}</small>
-                    </div>
-                </div>`;
-        });
-    }
-
-    function filtrarSetor(s, btn) {
-        setorFiltrado = s;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderizarCards();
-    }
-
-    async function carregarPendencias() {
-        const res = await fetch(URL_WEB_APP);
-        dadosCache = await res.json();
-        renderizarCards();
+        } else { alert("Erro!"); }
     }
 
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.getElementById('btn-' + id).classList.add('active');
-        if(id === 'v-dash') carregarPendencias();
+        document.getElementById('btn-'+id).classList.add('active');
+        if(id === 'v-dash') carregar();
+        if(id === 'v-exp') startVid();
+    }
+
+    async function carregar() {
+        const r = await fetch(URL);
+        dados = await r.json();
+        render();
+    }
+
+    function filtrar(s, b) {
+        fAtual = s;
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        b.classList.add('active');
+        render();
+    }
+
+    function render() {
+        const g = document.getElementById('grid');
+        g.innerHTML = "";
+        dados.slice(1).forEach(row => {
+            const s = row[3].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Remove acentos para o filtro
+            const filtroLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            if(fAtual !== "TODOS" && !s.includes(filtroLimpo)) return;
+
+            let c = "";
+            if(s.includes("CORAL")) c="c-coral";
+            else if(s.includes("LILAS")) c="c-lilas";
+            else if(s.includes("BEGE")) c="c-bege";
+            else if(s.includes("AMARELO")) c="c-amarelo";
+            else if(s.includes("ROSA")) c="c-rosa";
+
+            g.innerHTML += `<div class="card-p">
+                <div class="tag ${c}">${row[3]}</div>
+                <div style="padding:10px"><b>Cód: ${row[2]}</b><br><small>${new Date(row[1]).toLocaleDateString()}</small></div>
+            </div>`;
+        });
+    }
+
+    async function enviarAtend() {
+        const cod = document.getElementById('at-cod').value;
+        await fetch(URL, {method:'POST', body: JSON.stringify({action:'solicitar', codCliente:cod})});
+        alert("Enviado!");
+        carregar();
+    }
+
+    async function startVid() {
+        const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+        document.getElementById('vid').srcObject = stream;
+    }
+
+    async function vincularExp() {
+        const id = document.getElementById('exp-id').value;
+        const canv = document.getElementById('canv');
+        const vid = document.getElementById('vid');
+        canv.width = vid.videoWidth; canv.height = vid.videoHeight;
+        canv.getContext('2d').drawImage(vid, 0, 0);
+        const foto = canv.toDataURL('image/jpeg', 0.5);
+        
+        await fetch(URL, {method:'POST', body: JSON.stringify({action:'vincular_pedido', idPedido:id, foto:foto})});
+        alert("Sucesso!");
+        carregar();
     }
 </script>
 </body>
 </html>
-
