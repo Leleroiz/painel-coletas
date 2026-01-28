@@ -49,7 +49,7 @@
     <button onclick="changeView('v-dash')" id="btn-v-dash" class="active">📺 Monitor</button>
     <button onclick="changeView('v-atend')" id="btn-v-atend">📞 Atendimento</button>
     <button onclick="changeView('v-exp')" id="btn-v-exp">📦 Expedição</button>
-    <button onclick="window.open('COLE_AQUI_O_LINK_DA_SUA_PLANILHA', '_blank')" class="btn-planilha">📊 Colar Relatório</button>
+    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2036976699#gid=2036976699', '_blank')" class="btn-planilha">📊 Colar Relatório</button>
 </nav>
 
 <div class="container">
@@ -88,7 +88,7 @@
 
 <script>
     // --- COLE SUA URL DO WEB APP AQUI ---
-    const URL_WEB_APP = "COLE_AQUI_SUA_URL_DO_APPS_SCRIPT";
+    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec";
 
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -186,3 +186,4 @@
 </script>
 </body>
 </html>
+
