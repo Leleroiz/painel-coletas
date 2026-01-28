@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitor de Coletas - Lab Óptico</title>
+    <style>
+        body {
+            margin: 0; padding: 20px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f2f5; /* Fundo levemente cinza para destacar os cards */
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        header {
+            width: 100%; max-width: 1200px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: #000; color: #fff;
+            padding: 20px 40px; border-radius: 20px;
+            box-shadow: 0px 10px 20px rgba(0,0,0,0.2);
+            margin-bottom: 30px; box-sizing: border-box;
+        }
+
+        header h1 { margin: 0; font-size: 2.5vw; text-transform: uppercase; }
+        
+        #contador-geral {
+            background: #ffeb3b; color: #000;
+            padding: 10px 25px; border-radius: 50px;
+            font-weight: 900; font-size: 1.5vw;
+            border: 4px solid #fff;
+        }
+
+        /* ÁREA DOS CARDS */
+        #container-coletas {
+            width: 100%; max-width: 1300px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px; padding: 10px;
+        }
+
+        /* ESTILO DO CARD */
+        .card-coleta {
+            background: #fff; border: 6px solid #000;
+            border-radius: 20px; padding: 20px;
+            box-shadow: 10px 10px 0px #000;
+            transition: transform 0.2s;
+            position: relative; animation: entrada 0.5s ease-out;
+        }
+
+        @keyframes entrada {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .id-servico {
+            font-size: 3vw; font-weight: 900; color: #000;
+            display: block; border-bottom: 3px solid #eee;
+            margin-bottom: 10px;
+        }
+
+        .cliente-nome {
+            font-size: 1.2vw; font-weight: 700; color: #333;
+            text-transform: uppercase; display: block;
+        }
+
+        .status-badge {
+            display: inline-block; margin-top: 15px;
+            background: #ff9800; color: #fff;
+            padding: 5px 15px; border-radius: 10px;
+            font-weight: 800; font-size: 0.9vw;
+        }
+
+        /* MENSAGEM QUANDO ESTÁ VAZIO */
+        #msg-vazio {
+            grid-column: 1 / -1; text-align: center;
+            padding: 100px; background: #fff;
+            border: 5px dashed #ccc; border-radius: 30px;
+            display: none;
+        }
+        #msg-vazio h2 { font-size: 3vw; color: #aaa; margin: 0; }
+        #msg-vazio span { font-size: 5vw; }
+
+        /* RODAPÉ INFORMATIVO */
+        footer {
+            margin-top: auto; padding: 20px; font-weight: bold; color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>📦 Monitor de Coletas</h1>
+            <div style="font-size: 0.9vw; opacity: 0.8;">LAB ÓPTICO - CONTROLE DE EXPEDIÇÃO</div>
+        </div>
+        <div id="contador-geral">PENDENTES: 0</div>
+    </header>
+
+    <div id="container-coletas">
+        <div id="msg-vazio">
+            <span>✅</span>
+            <h2>Tudo em dia! Nenhuma coleta pendente.</h2>
+        </div>
+    </div>
+
+    <footer id="ultima-atualizacao">Sincronizando com a planilha...</footer>
+
+    <script>
+        // COLE AQUI O LINK CSV DA ABA "DASHBOARD"
+        const LINK_CSV_DASHBOARD = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXzB6tWd2OEkATjN7yveBnsuFy65h6tHf4xzZp0RcbptsVDId4he20lS6Ctmeh-seBceh0USMjGQtG/pub?gid=1796299017&single=true&output=csv";
+
+        async function atualizarMonitor() {
+            try {
+                const res = await fetch(LINK_CSV_DASHBOARD + "&t=" + Math.random());
+                const data = await res.text();
+                const rows = data.split('\n');
+                
+                const container = document.getElementById('container-coletas');
+                const contador = document.getElementById('contador-geral');
+                const msgVazio = document.getElementById('msg-vazio');
+                const footer = document.getElementById('ultima-atualizacao');
+
+                // Limpa cards antigos (mantendo a mensagem de vazio)
+                const cardsExistentes = container.querySelectorAll('.card-coleta');
+                cardsExistentes.forEach(c => c.remove());
+
+                let pendentes = 0;
+
+                for (let i = 0; i < rows.length; i++) {
+                    const colunas = rows[i].split(',');
+                    const id = colunas[0]?.trim().replace(/^"(.*)"$/, '$1');
+                    const cliente = colunas[1]?.trim().replace(/^"(.*)"$/, '$1');
+
+                    // Verifica se tem um ID válido (pula cabeçalhos ou linhas vazias)
+                    if (id && id !== "ID" && id !== "ID do Serviço" && id.length > 1) {
+                        pendentes++;
+                        
+                        const card = document.createElement('div');
+                        card.className = 'card-coleta';
+                        card.innerHTML = `
+                            <span class="id-servico">#${id}</span>
+                            <span class="cliente-nome">${cliente || 'Cliente não informado'}</span>
+                            <div class="status-badge">AGUARDANDO RETORNO</div>
+                        `;
+                        container.appendChild(card);
+                    }
+                }
+
+                // Atualiza contadores e mensagens
+                contador.innerText = `PENDENTES: ${pendentes}`;
+                if (pendentes === 0) {
+                    msgVazio.style.display = 'block';
+                } else {
+                    msgVazio.style.display = 'none';
+                }
+
+                const agora = new Date();
+                footer.innerText = `Última atualização: ${agora.toLocaleTimeString('pt-BR')}`;
+
+            } catch (e) {
+                console.error("Erro ao buscar dados:", e);
+                document.getElementById('ultima-atualizacao').innerText = "Erro ao conectar com a planilha. Verifique o link.";
+            }
+        }
+
+        // Atualiza a cada 30 segundos para ser bem ágil
+        setInterval(atualizarMonitor, 30000);
+        atualizarMonitor();
+    </script>
+</body>
+</html>
