@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabLog v3.0 - Security & Filters</title>
+    <title>LabLog</title>
     <style>
-        :root { --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; --coral: #FF7F50; --lilas: #DCD0FF; --bege: #F5F5DC; --amarelo: #FFD700; }
+        :root { 
+            --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; 
+            --coral: #FF7F50; --lilas: #DCD0FF; --bege: #F5F5DC; --amarelo: #FFD700; --rosa: #FFB6C1;
+        }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); }
         
         /* LOGIN */
@@ -15,37 +18,43 @@
         nav { background: var(--primary); padding: 15px; display: none; justify-content: center; gap: 10px; position: sticky; top: 0; z-index: 1000; }
         nav button { background: none; border: 2px solid #444; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         nav button.active { background: var(--accent); color: #000; border-color: var(--accent); }
-        .btn-planilha { background: #2e7d32 !important; border-color: #1b5e20 !important; }
+        .btn-planilha { background: #2e7d32 !important; display: none; } /* Escondido por padrão */
 
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .card { background: white; border: 4px solid #000; border-radius: 20px; padding: 25px; box-shadow: 10px 10px 0px #000; margin-bottom: 20px; }
         .view { display: none; } .view.active { display: block; }
 
-        /* FILTRO */
-        .filter-bar { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .filter-btn { padding: 8px 15px; border: 2px solid #000; border-radius: 20px; cursor: pointer; font-weight: bold; background: #fff; }
+        /* FILTROS */
+        .filter-bar { margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .filter-btn { padding: 8px 12px; border: 2px solid #000; border-radius: 15px; cursor: pointer; font-weight: bold; background: #fff; font-size: 0.8rem; }
         .filter-btn.active { background: var(--primary); color: #fff; }
 
-        /* CARDS */
-        .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .card-pendencia { background: #fff; border: 3px solid #000; border-radius: 12px; overflow: hidden; }
-        .setor-tag { padding: 5px; text-align: center; font-weight: 900; font-size: 0.7rem; border-bottom: 2px solid #000; }
+        /* CARDS DO MONITOR */
+        .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .card-pendencia { background: #fff; border: 3px solid #000; border-radius: 15px; overflow: hidden; box-shadow: 5px 5px 0px #000; }
+        .setor-tag { padding: 8px; text-align: center; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; border-bottom: 3px solid #000; }
         
+        /* CORES DOS SETORES */
+        .tag-coral { background: var(--coral); }
+        .tag-lilas { background: var(--lilas); }
+        .tag-bege { background: var(--bege); }
+        .tag-amarelo { background: var(--amarelo); }
+        .tag-rosa { background: var(--rosa); }
+
         @keyframes flash-red { 0%, 100% { background: #fff; } 50% { background: #ffcccc; } }
         .atrasado { animation: flash-red 1.5s infinite; }
         
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 3px solid #000; border-radius: 10px; font-weight: bold; }
-        .btn-main { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; }
+        .btn-main { width: 100%; padding: 15px; background: #000; color: #fff; border-radius: 10px; font-weight: 900; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="card" style="width: 300px; box-shadow: none;">
-        <h2 style="text-align:center">🔐 LABLOG LOGIN</h2>
-        <input type="text" id="user" placeholder="Usuário">
-        <input type="password" id="pass" placeholder="Senha">
-        <button class="btn-main" onclick="fazerLogin()">Entrar</button>
+    <div class="card" style="width: 300px;">
+        <h2 style="text-align:center">🔐 LOGIN</h2>
+        <input type="text" id="user" placeholder="Usuário" style="width:100%; padding:10px; margin-bottom:10px;">
+        <input type="password" id="pass" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:10px;">
+        <button class="btn-main" onclick="fazerLogin()">ENTRAR</button>
     </div>
 </div>
 
@@ -53,58 +62,86 @@
     <button onclick="changeView('v-dash')" id="btn-v-dash" class="active">📺 Monitor</button>
     <button onclick="changeView('v-atend')" id="btn-v-atend">📞 Atendimento</button>
     <button onclick="changeView('v-exp')" id="btn-v-exp">📦 Expedição</button>
-    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2036976699#gid=2036976699', '_blank')" class="btn-planilha">📊 Colar Relatório</button>
+    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2025386638#gid=2025386638', '_blank')" id="btn-adm-planilha" class="btn-planilha">📊 Colar Relatório</button>
 </nav>
 
 <div class="container">
     <div id="v-dash" class="view">
-        <h2>Painel de Coletas</h2>
         <div class="filter-bar">
             <div class="filter-btn active" onclick="filtrarSetor('TODOS', this)">TODOS</div>
             <div class="filter-btn" onclick="filtrarSetor('CORAL', this)">CORAL</div>
-            <div class="filter-btn" onclick="filtrarSetor('LILAS', this)">LILÁS</div>
+            <div class="filter-btn" onclick="filtrarSetor('LILÁS', this)">LILÁS</div>
             <div class="filter-btn" onclick="filtrarSetor('BEGE', this)">BEGE</div>
             <div class="filter-btn" onclick="filtrarSetor('AMARELO', this)">AMARELO</div>
+            <div class="filter-btn" onclick="filtrarSetor('ROSA', this)">ROSA</div>
         </div>
-        <div id="grid-monitor" class="grid-monitor">Carregando...</div>
+        <div id="grid-monitor" class="grid-monitor"></div>
     </div>
-
-    <div id="v-atend" class="view">
-        <div class="card">
-            <h2>Nova Coleta Manual</h2>
-            <input type="number" id="at-cod" placeholder="Código do Cliente">
-            <button class="btn-main" onclick="enviarSolicitacao()">Lançar Solicitação</button>
-        </div>
     </div>
-
-    <div id="v-exp" class="view">
-        <div class="card">
-            <h2>Recebimento</h2>
-            <input type="text" id="exp-id-pedido" placeholder="BIPAR ID DO PEDIDO">
-            <video id="webcam" autoplay playsinline style="width:100%; border-radius:10px; border:3px solid #000"></video>
-            <canvas id="canvas" style="display:none;"></canvas>
-            <button class="btn-main" style="background:#2196F3" onclick="vincularEReceber()">📸 Confirmar</button>
-        </div>
-    </div>
-</div>
 
 <script>
     const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec";
-    let setorAtual = "TODOS";
-    let dadosGlobais = [];
+    let setorFiltrado = "TODOS";
+    let dadosCache = [];
 
     async function fazerLogin() {
-        const user = document.getElementById('user').value;
-        const pass = document.getElementById('pass').value;
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
         
-        // Em produção, use fetch com action: "login". Para teste rápido:
-        if(user === "admin" && pass === "123") { // Altere para seu sistema de validação
+        const resp = await fetch(URL_WEB_APP, {
+            method: 'POST',
+            body: JSON.stringify({action: 'login', user: u, pass: p})
+        });
+        const res = await resp.json();
+
+        if(res.sucesso) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-nav').style.display = 'flex';
+            if(res.nivel === 'ADMIN') document.getElementById('btn-adm-planilha').style.display = 'block';
             changeView('v-dash');
         } else {
-            alert("Acesso negado!");
+            alert("Usuário ou senha incorretos!");
         }
+    }
+
+    function renderizarCards() {
+        const grid = document.getElementById('grid-monitor');
+        grid.innerHTML = "";
+        
+        dadosCache.forEach((row, i) => {
+            if(i === 0) return;
+            const setor = (row[3] || "GERAL").toUpperCase();
+            if(setorFiltrado !== "TODOS" && !setor.includes(setorFiltrado)) return;
+
+            // Define a classe de cor baseada no nome do setor
+            let corClasse = "tag-coral"; 
+            if(setor.includes("LILAS") || setor.includes("LILÁS")) corClasse = "tag-lilas";
+            if(setor.includes("BEGE")) corClasse = "tag-bege";
+            if(setor.includes("AMARELO")) corClasse = "tag-amarelo";
+            if(setor.includes("ROSA")) corClasse = "tag-rosa";
+
+            grid.innerHTML += `
+                <div class="card-pendencia">
+                    <div class="setor-tag ${corClasse}">${setor}</div>
+                    <div style="padding:15px">
+                        <span style="font-size:1.2rem; font-weight:bold;">Cód: ${row[2]}</span><br>
+                        <small>📅 ${new Date(row[1]).toLocaleDateString()}</small>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function filtrarSetor(s, btn) {
+        setorFiltrado = s;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderizarCards();
+    }
+
+    async function carregarPendencias() {
+        const res = await fetch(URL_WEB_APP);
+        dadosCache = await res.json();
+        renderizarCards();
     }
 
     function changeView(id) {
@@ -113,56 +150,7 @@
         document.getElementById(id).classList.add('active');
         document.getElementById('btn-' + id).classList.add('active');
         if(id === 'v-dash') carregarPendencias();
-        if(id === 'v-exp') startCamera();
     }
-
-    async function carregarPendencias() {
-        const grid = document.getElementById('grid-monitor');
-        try {
-            const res = await fetch(URL_WEB_APP);
-            dadosGlobais = await res.json();
-            renderizarCards();
-        } catch (e) { grid.innerHTML = "Erro ao carregar."; }
-    }
-
-    function filtrarSetor(setor, btn) {
-        setorAtual = setor;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderizarCards();
-    }
-
-    function renderizarCards() {
-        const grid = document.getElementById('grid-monitor');
-        grid.innerHTML = "";
-        
-        dadosGlobais.forEach((row, i) => {
-            if(i === 0) return;
-            const setorCard = (row[3] || "GERAL").toUpperCase();
-            
-            if(setorAtual !== "TODOS" && !setorCard.includes(setorAtual)) return;
-
-            const dataSolic = new Date(row[1]);
-            const atrasado = (new Date() - dataSolic) / (1000*60*60*24) >= 2;
-            const cor = setorCard.includes("CORAL") ? "var(--coral)" : setorCard.includes("LILAS") ? "var(--lilas)" : "#eee";
-
-            grid.innerHTML += `
-                <div class="card-pendencia ${atrasado ? 'atrasado' : ''}">
-                    <div class="setor-tag" style="background:${cor}">${setorCard}</div>
-                    <div style="padding:10px">
-                        <strong>Cod: ${row[2]}</strong><br>
-                        <small>${dataSolic.toLocaleDateString()}</small>
-                    </div>
-                </div>`;
-        });
-    }
-
-    async function startCamera() {
-        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        document.getElementById('webcam').srcObject = s;
-    }
-
-    // ... (restante das funções enviarSolicitacao e vincularEReceber permanecem iguais)
 </script>
 </body>
 </html>
