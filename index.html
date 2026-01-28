@@ -3,25 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabLog - Inteligente</title>
+    <title>LabLog - Sistema Unificado</title>
     <style>
-        :root { --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; --coral: #FF7F50; --lilas: #DCD0FF; --bege: #F5F5DC; --amarelo: #FFD700; }
+        :root { 
+            --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; 
+            --coral: #FF7F50; --lilas: #DCD0FF; --bege: #F5F5DC; --amarelo: #FFD700; 
+        }
+        
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #333; }
+        
+        /* Menu Superior */
         nav { background: var(--primary); padding: 15px; display: flex; justify-content: center; gap: 10px; position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
         nav button { background: none; border: 2px solid #444; color: white; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
         nav button.active { background: var(--accent); color: #000; border-color: var(--accent); }
         .btn-planilha { background: #2e7d32 !important; border-color: #1b5e20 !important; }
+
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .card { background: white; border: 4px solid #000; border-radius: 20px; padding: 25px; box-shadow: 10px 10px 0px #000; margin-bottom: 20px; }
-        .view { display: none; } .view.active { display: block; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border: 3px solid #000; border-radius: 12px; box-sizing: border-box; font-size: 1.1rem; font-weight: bold; }
-        .btn-main { width: 100%; padding: 20px; background: #000; color: #fff; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
-        .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card-pendencia { background: #fff; border: 3px solid #000; border-radius: 15px; overflow: hidden; box-shadow: 5px 5px 0px #000; animation: fadeIn 0.3s; }
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* Estilo dos Cards do Monitor */
+        .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .card-pendencia { background: #fff; border: 3px solid #000; border-radius: 15px; overflow: hidden; box-shadow: 5px 5px 0px #000; transition: 0.3s; }
         .setor-tag { padding: 8px; text-align: center; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; border-bottom: 3px solid #000; }
         .info-pendencia { padding: 15px; }
+
+        /* --- ANIMAÇÃO PARA PEDIDOS ATRASADOS (2 DIAS) --- */
+        @keyframes flash-red {
+            0% { background-color: #fff; border-color: #000; }
+            50% { background-color: #ffcccc; border-color: #d32f2f; box-shadow: 0 0 15px #d32f2f; }
+            100% { background-color: #fff; border-color: #000; }
+        }
+        .atrasado { animation: flash-red 1.5s infinite; border-width: 5px !important; }
+
+        /* Formulários e Câmera */
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 3px solid #000; border-radius: 12px; box-sizing: border-box; font-size: 1.1rem; font-weight: bold; }
+        .btn-main { width: 100%; padding: 20px; background: #000; color: #fff; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
         video { width: 100%; border-radius: 12px; border: 3px solid #000; background: #000; margin-bottom: 10px; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -38,26 +57,25 @@
     <div id="v-dash" class="view active">
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2>Coletas Pendentes</h2>
-            <button onclick="carregarPendencias()" style="padding: 5px 10px; cursor: pointer; border-radius: 5px; border: 2px solid #000;">🔄 Atualizar</button>
+            <button onclick="carregarPendencias()" style="padding: 8px 15px; cursor: pointer; border: 2px solid #000; border-radius: 8px; font-weight: bold;">🔄 Atualizar</button>
         </div>
-        <div id="grid-monitor" class="grid-monitor">Carregando painel...</div>
+        <div id="grid-monitor" class="grid-monitor">Carregando...</div>
     </div>
 
     <div id="v-atend" class="view">
         <div class="card">
             <h2>Solicitar Coleta</h2>
-            <p>O setor será identificado automaticamente pelo código do cliente.</p>
+            <p>Digite apenas o código. O setor é identificado automaticamente.</p>
             <input type="number" id="at-cod" placeholder="Código do Cliente">
-            <button class="btn-main" id="btn-sol" onclick="enviarSolicitacao()">Registrar Solicitação</button>
+            <button class="btn-main" id="btn-sol" onclick="enviarSolicitacao()">Lançar no Painel</button>
         </div>
     </div>
 
     <div id="v-exp" class="view">
         <div class="card">
             <h2>Recebimento de Malote</h2>
-            <p style="font-size: 0.8rem; margin-bottom: 5px;">Bipe o ID. O sistema buscará o código do cliente no relatório.</p>
             <input type="text" id="exp-id-pedido" placeholder="BIPAR ID DO PEDIDO">
-            <input type="number" id="exp-cod-cliente" placeholder="Cód. Cliente (Apenas se ID não estiver no relatório)">
+            <input type="number" id="exp-cod-cliente" placeholder="Cód. Cliente (Opcional)">
             
             <video id="webcam" autoplay playsinline></video>
             <canvas id="canvas" style="display:none;"></canvas>
@@ -69,7 +87,8 @@
 </div>
 
 <script>
-    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; // <--- COLOQUE A URL DO WEB APP AQUI
+    // --- COLE SUA URL DO WEB APP AQUI ---
+    const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec";
 
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -80,78 +99,38 @@
         if(id === 'v-dash') carregarPendencias();
     }
 
+    // Carregar Monitor com Alerta de 2 dias
     async function carregarPendencias() {
         const grid = document.getElementById('grid-monitor');
         try {
             const res = await fetch(URL_WEB_APP);
             const data = await res.json();
             grid.innerHTML = "";
+
             if(data.length <= 1) {
-                grid.innerHTML = "<h3>✅ Nenhuma coleta pendente.</h3>";
+                grid.innerHTML = "<h3>✅ Tudo em dia! Nenhuma coleta pendente.</h3>";
                 return;
             }
+
             data.forEach((row, i) => {
-                if(i === 0) return;
+                if(i === 0) return; // Pula cabeçalho
+
+                const dataSolicitacao = new Date(row[1]); // Coluna B da planilha
+                const hoje = new Date();
+                const diffDias = (hoje - dataSolicitacao) / (1000 * 60 * 60 * 24);
+                
+                // Piscar se tiver mais de 2 dias (48h)
+                const classeAtraso = diffDias >= 2 ? "atrasado" : "";
+
                 const setor = (row[3] || "GERAL").toUpperCase();
-                const cor = setor.includes("CORAL") ? "var(--coral)" : 
-                            setor.includes("LILAS") ? "var(--lilas)" :
-                            setor.includes("BEGE") ? "var(--bege)" :
-                            setor.includes("AMARELO") ? "var(--amarelo)" : "#eee";
+                const corSetor = setor.includes("CORAL") ? "var(--coral)" : 
+                                 setor.includes("LILAS") ? "var(--lilas)" :
+                                 setor.includes("BEGE") ? "var(--bege)" :
+                                 setor.includes("AMARELO") ? "var(--amarelo)" : "#eee";
 
                 grid.innerHTML += `
-                    <div class="card-pendencia">
-                        <div class="setor-tag" style="background:${cor}">${setor}</div>
+                    <div class="card-pendencia ${classeAtraso}">
+                        <div class="setor-tag" style="background:${corSetor}">${setor}</div>
                         <div class="info-pendencia">
                             <span style="font-size:1.4rem; font-weight:900;">Cód: ${row[2]}</span><br>
-                            <small>Solicitado: ${new Date(row[1]).toLocaleTimeString()}</small>
-                        </div>
-                    </div>`;
-            });
-        } catch (e) { grid.innerHTML = "<p>Erro na conexão.</p>"; }
-    }
-
-    async function enviarSolicitacao() {
-        const cod = document.getElementById('at-cod').value;
-        if(!cod) return alert("Digite o código!");
-        document.getElementById('btn-sol').innerText = "Enviando...";
-        await fetch(URL_WEB_APP, { method: "POST", mode: 'no-cors', body: JSON.stringify({ action: "solicitar", codCliente: cod }) });
-        alert("Solicitação registrada!");
-        document.getElementById('at-cod').value = "";
-        document.getElementById('btn-sol').innerText = "Registrar Solicitação";
-        carregarPendencias();
-    }
-
-    async function startCamera() {
-        try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        document.getElementById('webcam').srcObject = stream; } catch (e) {}
-    }
-
-    async function vincularEReceber() {
-        const idPed = document.getElementById('exp-id-pedido').value;
-        const codCli = document.getElementById('exp-cod-cliente').value;
-        if(!idPed) return alert("Bipe o ID!");
-        const btn = document.getElementById('btn-exp');
-        btn.innerText = "Sincronizando...";
-        btn.style.background = "#666";
-
-        const canvas = document.getElementById('canvas');
-        const video = document.getElementById('webcam');
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const foto = canvas.toDataURL('image/jpeg', 0.5);
-
-        await fetch(URL_WEB_APP, { method: "POST", mode: 'no-cors', 
-            body: JSON.stringify({ action: "vincular_pedido", idPedido: idPed, codCliente: codCli, foto: foto }) 
-        });
-
-        alert("Recebido com sucesso!");
-        document.getElementById('exp-id-pedido').value = "";
-        btn.innerText = "📸 Bipar e Fotografar";
-        btn.style.background = "#2196F3";
-    }
-
-    carregarPendencias();
-    setInterval(carregarPendencias, 60000);
-</script>
-</body>
-</html>
+                            <small
