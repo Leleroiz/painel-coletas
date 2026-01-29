@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabLog</title>
+    <title>LabLog v3.5</title>
     <style>
         :root { 
             --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; 
@@ -17,7 +17,6 @@
         .btn-planilha { background: #2e7d32 !important; border-color: #1b5e20 !important; display: none; }
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .view { display: none; } .view.active { display: block; }
-        .view.active { display: block; }
         .card { background: white; border: 3px solid #000; border-radius: 15px; padding: 20px; box-shadow: 8px 8px 0px #000; margin-bottom: 20px; }
         
         /* FILTROS */
@@ -27,7 +26,7 @@
 
         /* CORES DOS CARDS */
         .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .card-p { border: 3px solid #000; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 4px 4px 0px #000; }
+        .card-p { border: 3px solid #000; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 4px 4px 0px #000; position: relative; }
         .tag { padding: 8px; text-align: center; font-weight: bold; border-bottom: 2px solid #000; text-transform: uppercase; }
         
         .c-coral { background: var(--coral); } .c-lilas { background: var(--lilas); }
@@ -36,46 +35,44 @@
         input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #000; border-radius: 8px; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* Estilo do Loader / Popup de Carregamento */
+        /* Estilo do Loader */
         #loader-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-        z-index: 9999;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
         }
         .spinner {
-        border: 8px solid #f3f3f3;
-        border-top: 8px solid var(--accent);
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin-bottom: 15px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid var(--accent);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
         }
-        @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-        }
-        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+
 <div id="loader-overlay">
     <div class="spinner"></div>
     <span id="loader-text">Carregando...</span>
 </div>
+
 <div id="login-screen">
     <div class="card" style="width: 280px;">
         <h3 style="text-align:center">LOGIN LABLOG</h3>
         <input type="text" id="user" placeholder="Usuário">
         <input type="password" id="pass" placeholder="Senha">
-        <button class="btn" id="btn-login-entrar" onclick="fazerLogin()">ENTRAR</button>
+        <button class="btn" onclick="fazerLogin()">ENTRAR</button>
     </div>
 </div>
 
@@ -83,7 +80,7 @@
     <button onclick="changeView('v-dash')" id="btn-v-dash">Monitor 🖥</button>
     <button onclick="changeView('v-atend')" id="btn-v-atend">Atendimento 📞</button>
     <button onclick="changeView('v-exp')" id="btn-v-exp">Expedição 🛵</button>
-    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2025386638#gid=2025386638', '_blank')" id="btn-planilha" style="background-color: #2e7d32; display: none;">📊 Planilha</button>
+    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit', '_blank')" id="btn-planilha" style="background-color: #2e7d32; display: none;">📊 Planilha</button>
 </nav>
 
 <div class="container">
@@ -95,83 +92,75 @@
             <button class="filter-btn" onclick="filtrar('BEGE', this)">BEGE</button>
             <button class="filter-btn" onclick="filtrar('AMARELO', this)">AMARELO</button>
             <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
+            <button class="filter-btn" style="background: #2196F3; color: white; border-color: #0d47a1;" onclick="carregar()">🔄 Atualizar</button>
         </div>
         <div id="grid" class="grid-monitor"></div>
     </div>
 
     <div id="v-atend" class="view">
-    <div class="card">
-        <h2>Atendimento 📞</h2>
-        
-        <label>Código do Cliente:</label>
-        <input type="number" id="at-cod" placeholder="Ex: 123" oninput="buscarNomeCliente(this.value)">
-        
-        <label>Nome do Cliente:</label>
-        <input type="text" id="at-nome" placeholder="Nome aparecerá aqui..." disabled style="background: #eee;">
-
-        <label>ID do Pedido (Opcional):</label>
-        <input type="text" id="at-id-opcional" placeholder="Ex: 999888">
-        
-        <button class="btn" onclick="enviarAtend()">Solicitar Coleta</button>
+        <div class="card">
+            <h2>Atendimento 📞</h2>
+            <label>Código do Cliente:</label>
+            <input type="number" id="at-cod" placeholder="Ex: 123" oninput="buscarNomeCliente(this.value)">
+            <label>Nome do Cliente:</label>
+            <input type="text" id="at-nome" placeholder="Nome aparecerá aqui..." disabled style="background: #eee;">
+            <label>ID do Pedido (Opcional):</label>
+            <input type="text" id="at-id-opcional" placeholder="Ex: 999888">
+            <button class="btn" onclick="enviarAtend()">Solicitar Coleta</button>
+        </div>
     </div>
-</div>
 
     <div id="v-exp" class="view">
-    <div class="card">
-        <h2>Expedição</h2>
-        <input type="text" id="exp-id" placeholder="ID do Pedido">
-        
-        <video id="vid" autoplay playsinline style="width:100%; border-radius:10px;"></video>
-        <canvas id="canv" style="display:none"></canvas>
-        
-        <button class="btn" style="background:#2196F3; margin-bottom: 10px;" onclick="vincularExp()">📸 Confirmar pela Câmera</button>
-
-        <button class="btn" style="background:#4CAF50" onclick="document.getElementById('file-input').click()">📁 Escolher da Galeria</button>
-
-        <button class="btn" style="background:#f44336; margin-top: 10px;" onclick="confirmarSemFoto()">⚠️ Confirmar Sem Foto</button>
-        
-        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="uploadGaleria(this)">
+        <div class="card">
+            <h2>Expedição</h2>
+            <input type="text" id="exp-id" placeholder="ID do Pedido ou Cód. Cliente">
+            <video id="vid" autoplay playsinline style="width:100%; border-radius:10px;"></video>
+            <canvas id="canv" style="display:none"></canvas>
+            <button class="btn" style="background:#2196F3; margin-bottom: 10px;" onclick="vincularExp()">📸 Confirmar pela Câmera</button>
+            <button class="btn" style="background:#4CAF50" onclick="document.getElementById('file-input').click()">📁 Escolher da Galeria</button>
+            <button class="btn" style="background:#f44336; margin-top: 10px;" onclick="confirmarSemFoto()">⚠️ Confirmar Sem Foto</button>
+            <input type="file" id="file-input" accept="image/*" style="display:none" onchange="uploadGaleria(this)">
+        </div>
     </div>
 </div>
 
 <script>
     const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
     let dados = [];
+    let listaClientes = [];
     let usuarioLogado = "";
     let fAtual = "TODOS";
 
+    function mostrarLoader(texto) {
+        document.getElementById('loader-text').innerText = texto || "Carregando...";
+        document.getElementById('loader-overlay').style.display = 'flex';
+    }
+
+    function esconderLoader() {
+        document.getElementById('loader-overlay').style.display = 'none';
+    }
+
     async function fazerLogin() {
-        const campoUser = document.getElementById('user');
-        const campoPass = document.getElementById('pass');
-        if (!campoUser || !campoPass) return;
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        if (!u || !p) return alert("Preencha tudo");
 
-        const u = campoUser.value;
-        const p = campoPass.value;
-
+        mostrarLoader("Autenticando...");
         try {
             const response = await fetch(URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'login', user: u, pass: p })
             });
             const res = await response.json();
-
             if (res.sucesso) {
-
                 usuarioLogado = u;
-                
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
-                const btnP = document.getElementById('btn-planilha');
-                if (res.nivel === "ADMIN" && btnP) {
-                    btnP.style.display = 'inline-block';
-                }
+                if (res.nivel === "ADMIN") document.getElementById('btn-planilha').style.display = 'inline-block';
                 changeView('v-dash');
-            } else {
-                alert("Usuário ou senha incorretos.");
-            }
-        } catch (err) {
-            alert("Erro de conexão: " + err.message);
-        }
+            } else { alert("Usuário ou senha incorretos."); }
+        } catch (err) { alert("Erro de conexão."); }
+        esconderLoader();
     }
 
     function changeView(id) {
@@ -184,11 +173,47 @@
     }
 
     async function carregar() {
+        mostrarLoader("Atualizando monitor...");
         try {
             const r = await fetch(URL);
             dados = await r.json();
             render();
-        } catch (e) { console.error("Erro ao carregar dados"); }
+        } catch (e) { console.error("Erro ao carregar"); }
+        esconderLoader();
+    }
+
+    async function carregarClientes() {
+        try {
+            const r = await fetch(URL + "?action=getClientes");
+            listaClientes = await r.json();
+        } catch (e) { console.error("Erro clientes"); }
+    }
+
+    function buscarNomeCliente(codigo) {
+        if (!codigo) { document.getElementById('at-nome').value = ""; return; }
+        const cliente = listaClientes.find(c => c.codigo.toString() === codigo.toString());
+        document.getElementById('at-nome').value = cliente ? cliente.nome : "Cliente não encontrado";
+    }
+
+    async function enviarAtend() {
+        const cod = document.getElementById('at-cod').value;
+        const nomeCli = document.getElementById('at-nome').value;
+        const idOpc = document.getElementById('at-id-opcional').value || "MANUAL";
+        if(!cod || nomeCli === "Cliente não encontrado") return alert("Código inválido!");
+
+        mostrarLoader("Solicitando...");
+        try {
+            await fetch(URL, {
+                method:'POST', 
+                body: JSON.stringify({ action: 'solicitar', codCliente: cod, idPedido: idOpc, solicitante: usuarioLogado })
+            });
+            alert("Solicitado!");
+            document.getElementById('at-cod').value = "";
+            document.getElementById('at-nome').value = "";
+            document.getElementById('at-id-opcional').value = "";
+            carregar();
+        } catch(e) { alert("Erro"); }
+        esconderLoader();
     }
 
     function filtrar(s, b) {
@@ -200,190 +225,115 @@
 
     function render() {
         const grid = document.getElementById('grid');
-        if (!grid) return;
         grid.innerHTML = "";
-        
-        // Remove acentos para comparar filtros (LILÁS vs LILAS)
         const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
         dados.slice(1).forEach(row => {
             if (row[4] !== "Pendente") return;
-
             let setorNome = (row[3] || "GERAL").toUpperCase();
             const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
             if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
 
             const dataSolic = new Date(row[1]);
             const horario = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            const dataTexto = dataSolic.toLocaleDateString('pt-BR');
-            const idsPendentes = row[5] || "Solicitação Manual";
-
-            let corClasse = ""; 
-            if (sLimpo.includes("CORAL")) corClasse = "c-coral";
-            else if (sLimpo.includes("LILAS")) corClasse = "c-lilas";
-            else if (sLimpo.includes("BEGE")) corClasse = "c-bege";
-            else if (sLimpo.includes("AMARELO")) corClasse = "c-amarelo";
-            else if (sLimpo.includes("ROSA")) corClasse = "c-rosa";
+            
+            // Busca o nome do cliente na nossa lista carregada
+            const infoCli = listaClientes.find(c => c.codigo.toString() === row[2].toString());
+            const nomeExibir = infoCli ? infoCli.nome : "Cliente " + row[2];
 
             grid.innerHTML += `
                 <div class="card-p">
-                    <div class="tag ${corClasse}">${setorNome}</div>
+                    <div class="tag ${getCor(sLimpo)}">${setorNome}</div>
                     <div style="padding:10px">
-                        <b>Cód: ${row[2]}</b><br>
-                        <div style="font-size: 0.8rem; margin: 5px 0; color: #555;">
-                            <strong>Pedidos:</strong> ${idsPendentes}
+                        <b>${nomeExibir}</b><br>
+                        <small>Cód: ${row[2]}</small>
+                        <div style="font-size: 0.8rem; margin: 8px 0; color: #555; background: #f9f9f9; padding: 4px; border-radius: 4px;">
+                            📦 <b>IDs:</b> ${row[5]}
                         </div>
-                        <small>⏰ ${dataTexto} às ${horario}</small>
+                        <div style="font-size: 0.75rem; color: #888;">
+                            👤 Solicitado por: <b>${row[6] || "Sistema"}</b>
+                        </div>
+                        <div style="text-align:right; font-size: 0.7rem; margin-top:5px;">⏰ ${horario}</div>
                     </div>
                 </div>`;
         });
     }
 
-    // ... outras funções (carregar, filtrar, render) ...
-
-let listaClientes = []; // Pode colocar logo abaixo de let usuarioLogado = "";
-
-// Busca os clientes assim que o app carrega
-async function carregarClientes() {
-    try {
-        const r = await fetch(URL + "?action=getClientes");
-        listaClientes = await r.json();
-    } catch (e) {
-        console.error("Erro ao carregar lista de clientes");
-    }
-}
-
-function buscarNomeCliente(codigo) {
-    if (!codigo) {
-        document.getElementById('at-nome').value = "";
-        return;
-    }
-    
-    // O .toString() garante que a comparação funcione mesmo se um for número e outro texto
-    const cliente = listaClientes.find(c => c.codigo.toString() === codigo.toString());
-    
-    const campoNome = document.getElementById('at-nome');
-    if (campoNome) {
-        campoNome.value = cliente ? cliente.nome : "Cliente não encontrado";
-    }
-}
-async function enviarAtend() {
-    const cod = document.getElementById('at-cod').value;
-    const idOpcional = document.getElementById('at-id-opcional').value || "MANUAL";
-    const nomeCli = document.getElementById('at-nome').value;
-
-    if(!cod || nomeCli === "Cliente não encontrado" || nomeCli === "") {
-        return alert("Por favor, insira um código de cliente válido!");
-    }
-
-    await fetch(URL, {
-        method:'POST', 
-        body: JSON.stringify({
-            action: 'solicitar', 
-            codCliente: cod, 
-            idPedido: idOpcional,
-            solicitante: usuarioLogado 
-        })
-    });
-
-    alert("Coleta para " + nomeCli + " solicitada!");
-    
-    // Limpa os campos
-    document.getElementById('at-cod').value = "";
-    document.getElementById('at-nome').value = "";
-    document.getElementById('at-id-opcional').value = "";
-    carregar();
-}
-
-    async function confirmarSemFoto() {
-    const id = document.getElementById('exp-id').value;
-    if(!id) return alert("Digite o ID ou Código do Cliente!");
-
-    if(!confirm("Deseja confirmar o recebimento SEM FOTO?")) return;
-
-    mostrarLoader("Registrando entrada...");
-    try {
-        await fetch(URL, {
-            method: 'POST', 
-            body: JSON.stringify({
-                action: 'vincular_pedido', 
-                idPedido: id, 
-                foto: "SEM_FOTO" // Enviamos um texto fixo em vez da imagem
-            })
-        });
-        alert("Baixa realizada sem foto!");
-        document.getElementById('exp-id').value = "";
-        carregar();
-    } catch(e) {
-        alert("Erro ao processar.");
-    }
-    esconderLoader();
-}
-    
-    async function startVid() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-            document.getElementById('vid').srcObject = stream;
-        } catch (e) { alert("Câmera não permitida."); }
+    function getCor(s) {
+        if (s.includes("CORAL")) return "c-coral";
+        if (s.includes("LILAS")) return "c-lilas";
+        if (s.includes("BEGE")) return "c-bege";
+        if (s.includes("AMARELO")) return "c-amarelo";
+        if (s.includes("ROSA")) return "c-rosa";
+        return "";
     }
 
     async function vincularExp() {
         const id = document.getElementById('exp-id').value;
         if(!id) return alert("Bipe o ID");
+        mostrarLoader("Enviando foto...");
         const canv = document.getElementById('canv');
         const vid = document.getElementById('vid');
         canv.width = vid.videoWidth; canv.height = vid.videoHeight;
         canv.getContext('2d').drawImage(vid, 0, 0);
         const foto = canv.toDataURL('image/jpeg', 0.5);
-        
-        await fetch(URL, {method:'POST', body: JSON.stringify({action:'vincular_pedido', idPedido:id, foto:foto})});
-        alert("Sucesso!");
-        document.getElementById('exp-id').value = "";
-        carregar();
-    }
-        function mostrarLoader(texto) {
-    document.getElementById('loader-text').innerText = texto || "Carregando...";
-    document.getElementById('loader-overlay').style.display = 'flex';
+        try {
+            await fetch(URL, {method:'POST', body: JSON.stringify({action:'vincular_pedido', idPedido:id, foto:foto})});
+            alert("Sucesso!");
+            document.getElementById('exp-id').value = "";
+            carregar();
+        } catch(e) { alert("Erro"); }
+        esconderLoader();
     }
 
-function esconderLoader() {
-    document.getElementById('loader-overlay').style.display = 'none';
-    }
-    
     async function uploadGaleria(input) {
-    if (input.files && input.files[0]) {
+        if (!input.files[0]) return;
         const id = document.getElementById('exp-id').value;
-        if(!id) {
-            alert("Bipe o ID do pedido primeiro!");
-            input.value = ""; 
-            return;
-        }
-
+        if(!id) { alert("Digite o ID primeiro!"); input.value = ""; return; }
+        
+        mostrarLoader("Subindo imagem...");
         const reader = new FileReader();
         reader.onload = async function(e) {
-            const fotoBase64 = e.target.result;
-            
-            // Manda para o seu Código.gs (doPost)
-            await fetch(URL, {
-                method: 'POST', 
-                body: JSON.stringify({action: 'vincular_pedido', idPedido: id, foto: fotoBase64})
-            });
-            
-            alert("Recebido com sucesso via Galeria!");
-            document.getElementById('exp-id').value = "";
-            input.value = ""; 
-            carregar();
+            try {
+                await fetch(URL, {
+                    method: 'POST', 
+                    body: JSON.stringify({action: 'vincular_pedido', idPedido: id, foto: e.target.result})
+                });
+                alert("Sucesso via Galeria!");
+                document.getElementById('exp-id').value = "";
+                carregar();
+            } catch(e) { alert("Erro"); }
+            esconderLoader();
         };
         reader.readAsDataURL(input.files[0]);
     }
-}
-    carregar(); 
-    carregarClientes();
+
+    async function confirmarSemFoto() {
+        const id = document.getElementById('exp-id').value;
+        if(!id) return alert("Digite o ID ou Código!");
+        if(!confirm("Confirmar sem foto?")) return;
+        mostrarLoader("Processando...");
+        try {
+            await fetch(URL, {
+                method: 'POST', 
+                body: JSON.stringify({ action: 'vincular_pedido', idPedido: id, foto: "SEM_FOTO" })
+            });
+            alert("Baixa realizada!");
+            document.getElementById('exp-id').value = "";
+            carregar();
+        } catch(e) { alert("Erro"); }
+        esconderLoader();
+    }
+
+    async function startVid() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+            document.getElementById('vid').srcObject = stream;
+        } catch (e) { alert("Câmera bloqueada."); }
+    }
+
+    // Inicialização
+    carregarClientes().then(() => carregar());
 </script>
-
-
-
-
-
-
+</body>
+</html>
