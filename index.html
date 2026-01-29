@@ -295,7 +295,48 @@
     }
 
     document.getElementById('pass').addEventListener('keypress', e => { if (e.key === 'Enter') fazerLogin(); });
+
+    async function enviarAtend() {
+    const cod = document.getElementById('at-cod').value;
+    const ids = document.getElementById('at-id-opcional').value;
+    const nome = document.getElementById('at-nome').value;
+
+    if (!cod || nome === "Cliente não encontrado") return alert("Selecione um cliente válido");
+
+    mostrarLoader("Enviando solicitação...");
+    try {
+        const response = await fetch(URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'solicitar',
+                codCliente: cod,
+                idPedido: ids,
+                solicitante: usuarioLogado
+            })
+        });
+        const res = await response.json();
+        if (res.sucesso) {
+            alert("Solicitação enviada!");
+            document.getElementById('at-cod').value = "";
+            document.getElementById('at-id-opcional').value = "";
+            document.getElementById('at-nome').value = "";
+            changeView('v-dash');
+        }
+    } catch (e) {
+        alert("Erro ao enviar. Verifique a conexão.");
+    }
+    esconderLoader();
+}
+
+// Adicione também a função de filtro que faltava para os botões do monitor
+function filtrar(setor, btn) {
+    fAtual = setor;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+}
 </script>
 </body>
 </html>
+
 
