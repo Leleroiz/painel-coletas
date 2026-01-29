@@ -156,12 +156,19 @@
                 usuarioLogado = u;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
-                if (res.nivel === "ADMIN") document.getElementById('btn-planilha').style.display = 'inline-block';
+        
+                // LÓGICA DE PERMISSÃO
+                if (res.nivel === "ATENDIMENTO") {
+                    document.getElementById('btn-v-exp').style.display = 'none'; // Esconde Expedição
+                } else if (res.nivel === "ADMIN") {
+                    document.getElementById('btn-planilha').style.display = 'inline-block';
+                    document.getElementById('btn-v-exp').style.display = 'inline-block';
+                }
+        
                 changeView('v-dash');
-            } else { alert("Usuário ou senha incorretos."); }
-        } catch (err) { alert("Erro de conexão."); }
-        esconderLoader();
-    }
+            } catch (err) { alert("Erro de conexão."); }
+                esconderLoader();
+            }
 
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -349,5 +356,6 @@
 </script>
 </body>
 </html>
+
 
 
