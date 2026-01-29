@@ -69,12 +69,21 @@
     </div>
 
     <div id="v-atend" class="view">
-        <div class="card">
-            <h2>Atendimento</h2>
-            <input type="number" id="at-cod" placeholder="Código do Cliente">
-            <button class="btn" onclick="enviarAtend()">Solicitar Coleta</button>
-        </div>
+    <div class="card">
+        <h2>Atendimento 📞</h2>
+        
+        <label>Código do Cliente:</label>
+        <input type="number" id="at-cod" placeholder="Ex: 123" oninput="buscarNomeCliente(this.value)">
+        
+        <label>Nome do Cliente:</label>
+        <input type="text" id="at-nome" placeholder="Nome aparecerá aqui..." disabled style="background: #eee;">
+
+        <label>ID do Pedido (Opcional):</label>
+        <input type="text" id="at-id-opcional" placeholder="Ex: 999888">
+        
+        <button class="btn" onclick="enviarAtend()">Solicitar Coleta</button>
     </div>
+</div>
 
     <div id="v-exp" class="view">
     <div class="card">
@@ -95,6 +104,7 @@
 <script>
     const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
     let dados = [];
+    let usuarioLogado = "";
     let fAtual = "TODOS";
 
     async function fazerLogin() {
@@ -113,6 +123,9 @@
             const res = await response.json();
 
             if (res.sucesso) {
+
+                usuarioLogado = u;
+                
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
                 const btnP = document.getElementById('btn-planilha');
@@ -194,14 +207,56 @@
         });
     }
 
-    async function enviarAtend() {
-        const cod = document.getElementById('at-cod').value;
-        if(!cod) return alert("Digite o código");
-        await fetch(URL, {method:'POST', body: JSON.stringify({action:'solicitar', codCliente:cod})});
-        alert("Enviado!");
-        document.getElementById('at-cod').value = "";
-        carregar();
+    // ... outras funções (carregar, filtrar, render) ...
+
+let listaClientes = []; // Pode colocar logo abaixo de let usuarioLogado = "";
+
+// Busca os clientes assim que o app carrega
+async function carregarClientes() {
+    try {
+        const r = await fetch(URL + "?action=getClientes");
+        listaClientes = await r.json();
+    } catch (e) {
+        console.error("Erro ao carregar lista de clientes");
     }
+}
+
+function buscarNomeCliente(codigo) {
+    // Procura na lista o objeto onde o código bate com o que foi digitado
+    const cliente = listaClientes.find(c => c.codigo == codigo);
+    const campoNome = document.getElementById('at-nome');
+    if (campoNome) {
+        campoNome.value = cliente ? cliente.nome : "Cliente não encontrado";
+    }
+}
+
+async function enviarAtend() {
+    const cod = document.getElementById('at-cod').value;
+    const idOpcional = document.getElementById('at-id-opcional').value || "MANUAL";
+    const nomeCli = document.getElementById('at-nome').value;
+
+    if(!cod || nomeCli === "Cliente não encontrado" || nomeCli === "") {
+        return alert("Por favor, insira um código de cliente válido!");
+    }
+
+    await fetch(URL, {
+        method:'POST', 
+        body: JSON.stringify({
+            action: 'solicitar', 
+            codCliente: cod, 
+            idPedido: idOpcional,
+            solicitante: usuarioLogado 
+        })
+    });
+
+    alert("Coleta para " + nomeCli + " solicitada!");
+    
+    // Limpa os campos
+    document.getElementById('at-cod').value = "";
+    document.getElementById('at-nome').value = "";
+    document.getElementById('at-id-opcional').value = "";
+    carregar();
+}
 
     async function startVid() {
         try {
@@ -252,5 +307,6 @@
     }
 }
 </script>
+
 
 
