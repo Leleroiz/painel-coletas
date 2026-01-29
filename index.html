@@ -161,8 +161,15 @@
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.getElementById('btn-'+id).classList.add('active');
+        
+        // Gerenciamento Inteligente da Câmera
+        if(id === 'v-exp') {
+            startVid(); // Liga a câmera apenas se for para Expedição
+        } else {
+            stopVid(); // Desliga a câmera imediatamente se for para qualquer outra tela
+        }
+
         if(id === 'v-dash') carregar();
-        if(id === 'v-exp') startVid();
     }
 
     async function carregar() {
@@ -249,6 +256,7 @@
         try {
             await fetch(URL, {method:'POST', body: JSON.stringify({action:'vincular_pedido', idPedido:id, foto:foto})});
             alert("Sucesso!");
+            stopVid();
             document.getElementById('exp-id').value = "";
             carregar();
         } catch(e) { alert("Erro"); }
@@ -292,6 +300,15 @@
             const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
             document.getElementById('vid').srcObject = stream;
         } catch (e) { alert("Câmera bloqueada."); }
+    }
+
+    function stopVid() {
+        if (streamGlobal) {
+            // Desliga cada rastro de hardware (luz da câmera apaga)
+            streamGlobal.getTracks().forEach(track => track.stop());
+            streamGlobal = null;
+            document.getElementById('vid').srcObject = null;
+        }
     }
 
     document.getElementById('pass').addEventListener('keypress', e => { if (e.key === 'Enter') fazerLogin(); });
@@ -338,6 +355,7 @@ function filtrar(setor, btn) {
 </script>
 </body>
 </html>
+
 
 
 
