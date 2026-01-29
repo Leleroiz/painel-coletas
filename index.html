@@ -93,19 +93,40 @@
     let fAtual = "TODOS";
 
     async function fazerLogin() {
-        const u = document.getElementById('user').value;
-        const p = document.getElementById('pass').value;
-        const r = await fetch(URL, {method:'POST', body: JSON.stringify({action:'login', user:u, pass:p})});
-        const res = await r.json();
-        if(res.sucesso) {
-            document.getElementById('login-screen').style.display = 'none'; // Esconde o login
-            document.getElementById('main-nav').style.display = 'flex';     // Mostra o menu
-            if(res.nivel === "ADMIN") {
-        document.getElementById('btn-planilha').style.display = 'inline-block'; // Faz o botão aparecer
+    const u = document.getElementById('user').value;
+    const p = document.getElementById('pass').value;
+    
+    if (!u || !p) {
+        alert("Por favor, preencha usuário e senha.");
+        return;
     }
-    // ----------------------------
 
-    changeView('v-dash');
+    try {
+        const r = await fetch(URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'login', user: u, pass: p })
+        });
+        
+        const res = await r.json();
+
+        if (res.sucesso) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-nav').style.display = 'flex';
+            
+            // Verifica se o botão da planilha existe antes de mudar o estilo
+            const btnPlanilha = document.getElementById('btn-planilha');
+            if (res.nivel === "ADMIN" && btnPlanilha) {
+                btnPlanilha.style.display = 'inline-block';
+            }
+            
+            changeView('v-dash');
+        } else {
+            alert("Usuário ou senha incorretos!");
+        }
+    } catch (error) {
+        console.error("Erro no login:", error);
+        alert("Erro de conexão! Verifique se a URL do Script está correta e se você salvou a 'Nova Implantação'.");
+    }
 }
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -199,6 +220,7 @@ dadosGlobais.slice(1).forEach(row => {
 </script>
 </body>
 </html>
+
 
 
 
