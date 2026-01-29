@@ -44,7 +44,7 @@
         <h3 style="text-align:center">LOGIN LABLOG</h3>
         <input type="text" id="user" placeholder="Usuário">
         <input type="password" id="pass" placeholder="Senha">
-        <button class="btn" onclick="fazerLogin()">ENTRAR</button>
+        <button class="btn" id="btn-login-entrar" onclick="fazerLogin()">ENTRAR</button>
     </div>
 </div>
 
@@ -93,39 +93,45 @@
     let fAtual = "TODOS";
 
     async function fazerLogin() {
-    const u = document.getElementById('user').value;
-    const p = document.getElementById('pass').value;
+    console.log("Tentando logar...");
+    alert("Botão clicado! Verificando dados..."); // Se isso aparecer, o HTML está ok.
+
+    const campoUser = document.getElementById('user');
+    const campoPass = document.getElementById('pass');
     
-    if (!u || !p) {
-        alert("Por favor, preencha usuário e senha.");
+    if (!campoUser || !campoPass) {
+        alert("Erro: Campos de usuário ou senha não encontrados no HTML!");
         return;
     }
 
+    const u = campoUser.value;
+    const p = campoPass.value;
+
     try {
-        const r = await fetch(URL, {
+        const response = await fetch(URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'login', user: u, pass: p })
         });
         
-        const res = await r.json();
+        const res = await response.json();
 
         if (res.sucesso) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-nav').style.display = 'flex';
             
-            // Verifica se o botão da planilha existe antes de mudar o estilo
-            const btnPlanilha = document.getElementById('btn-planilha');
-            if (res.nivel === "ADMIN" && btnPlanilha) {
-                btnPlanilha.style.display = 'inline-block';
+            // Verifica o botão da planilha
+            const btnP = document.getElementById('btn-planilha');
+            if (res.nivel === "ADMIN" && btnP) {
+                btnP.style.display = 'inline-block';
             }
             
             changeView('v-dash');
         } else {
-            alert("Usuário ou senha incorretos!");
+            alert("Usuário ou senha incorretos.");
         }
-    } catch (error) {
-        console.error("Erro no login:", error);
-        alert("Erro de conexão! Verifique se a URL do Script está correta e se você salvou a 'Nova Implantação'.");
+    } catch (err) {
+        console.error(err);
+        alert("Erro técnico: " + err.message);
     }
 }
     function changeView(id) {
@@ -220,6 +226,7 @@ dadosGlobais.slice(1).forEach(row => {
 </script>
 </body>
 </html>
+
 
 
 
