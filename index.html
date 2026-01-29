@@ -52,7 +52,7 @@
     <button onclick="changeView('v-dash')" id="btn-v-dash">Monitor 🖥</button>
     <button onclick="changeView('v-atend')" id="btn-v-atend">Atendimento 📞</button>
     <button onclick="changeView('v-exp')" id="btn-v-exp">Expedição 🛵</button>
-    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2025386638#gid=2025386638', '_blank')" id="btn-admin-planilha" style="background-color: #2e7d32; display: none;">📊 Planilha</button>
+    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit?gid=2025386638#gid=2025386638', '_blank')" id="btn-planilha" style="background-color: #2e7d32; display: none;">📊 Planilha</button>
 </nav>
 
 <div class="container">
@@ -98,15 +98,15 @@
         const r = await fetch(URL, {method:'POST', body: JSON.stringify({action:'login', user:u, pass:p})});
         const res = await r.json();
         if(res.sucesso) {
-            document.getElementById('login-screen').style.display='none';
-            document.getElementById('main-nav').style.display='flex';
+            document.getElementById('login-screen').style.display = 'none'; // Esconde o login
+            document.getElementById('main-nav').style.display = 'flex';     // Mostra o menu
             if(res.nivel === "ADMIN") {
-            document.getElementById('btn-admin-planilha').style.display = 'inline-block';
-        }
-            changeView('v-dash');
-        } else { alert("Erro!"); }
+        document.getElementById('btn-planilha').style.display = 'inline-block'; // Faz o botão aparecer
     }
+    // ----------------------------
 
+    changeView('v-dash');
+}
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -199,6 +199,7 @@ dadosGlobais.slice(1).forEach(row => {
 </script>
 </body>
 </html>
+
 
 
 
