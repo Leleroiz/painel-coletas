@@ -77,13 +77,18 @@
     </div>
 
     <div id="v-exp" class="view">
-        <div class="card">
-            <h2>Expedição</h2>
-            <input type="text" id="exp-id" placeholder="ID do Pedido">
-            <video id="vid" autoplay playsinline style="width:100%; border-radius:10px;"></video>
-            <canvas id="canv" style="display:none"></canvas>
-            <button class="btn" style="background:#2196F3" onclick="vincularExp()">📸 Confirmar</button>
-        </div>
+    <div class="card">
+        <h2>Expedição</h2>
+        <input type="text" id="exp-id" placeholder="ID do Pedido">
+        
+        <video id="vid" autoplay playsinline style="width:100%; border-radius:10px;"></video>
+        <canvas id="canv" style="display:none"></canvas>
+        
+        <button class="btn" style="background:#2196F3; margin-bottom: 10px;" onclick="vincularExp()">📸 Confirmar pela Câmera</button>
+
+        <button class="btn" style="background:#4CAF50" onclick="document.getElementById('file-input').click()">📁 Escolher da Galeria</button>
+        
+        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="uploadGaleria(this)">
     </div>
 </div>
 
@@ -220,3 +225,4 @@
         carregar();
     }
 </script>
+
