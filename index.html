@@ -222,14 +222,19 @@ async function carregarClientes() {
 }
 
 function buscarNomeCliente(codigo) {
-    // Procura na lista o objeto onde o código bate com o que foi digitado
-    const cliente = listaClientes.find(c => c.codigo == codigo);
+    if (!codigo) {
+        document.getElementById('at-nome').value = "";
+        return;
+    }
+    
+    // O .toString() garante que a comparação funcione mesmo se um for número e outro texto
+    const cliente = listaClientes.find(c => c.codigo.toString() === codigo.toString());
+    
     const campoNome = document.getElementById('at-nome');
     if (campoNome) {
         campoNome.value = cliente ? cliente.nome : "Cliente não encontrado";
     }
 }
-
 async function enviarAtend() {
     const cod = document.getElementById('at-cod').value;
     const idOpcional = document.getElementById('at-id-opcional').value || "MANUAL";
@@ -309,6 +314,7 @@ async function enviarAtend() {
     carregar(); 
     carregarClientes();
 </script>
+
 
 
 
