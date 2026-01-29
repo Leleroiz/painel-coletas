@@ -14,17 +14,22 @@
         nav { background: var(--primary); padding: 15px; display: none; justify-content: center; gap: 10px; position: sticky; top: 0; z-index: 1000; }
         nav button { background: none; border: 2px solid #444; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         nav button.active { background: var(--accent); color: #000; }
-        .btn-planilha { background: #2e7d32 !important; border-color: #1b5e20 !important; display: none; }
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .view { display: none; } .view.active { display: block; }
         .card { background: white; border: 3px solid #000; border-radius: 15px; padding: 20px; box-shadow: 8px 8px 0px #000; margin-bottom: 20px; }
         
-        /* FILTROS */
+        /* ANIMAÇÃO PISCAR 48H */
+        @keyframes blink-red {
+            0% { border-color: #000; box-shadow: 4px 4px 0px #000; }
+            50% { border-color: #ff0000; box-shadow: 0px 0px 15px #ff0000; background: #fff1f1; }
+            100% { border-color: #000; box-shadow: 4px 4px 0px #000; }
+        }
+        .atrasado-48h { animation: blink-red 1.5s infinite; border-width: 4px !important; }
+
         .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; }
         .filter-btn { padding: 8px 12px; border: 2px solid #000; border-radius: 10px; cursor: pointer; background: #fff; font-weight: bold; }
         .filter-btn.active { background: #000; color: #fff; }
 
-        /* CORES DOS CARDS */
         .grid-monitor { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
         .card-p { border: 3px solid #000; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 4px 4px 0px #000; position: relative; }
         .tag { padding: 8px; text-align: center; font-weight: bold; border-bottom: 2px solid #000; text-transform: uppercase; }
@@ -35,28 +40,8 @@
         input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #000; border-radius: 8px; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* Estilo do Loader */
-        #loader-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        .spinner {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid var(--accent);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
+        #loader-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid var(--accent); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -125,7 +110,7 @@
 </div>
 
 <script>
-    const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
+    const URL = "SUA_URL_AQUI"; // MANTENHA A SUA URL
     let dados = [];
     let listaClientes = [];
     let usuarioLogado = "";
@@ -156,23 +141,21 @@
                 usuarioLogado = u;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
-        
-                if (res.nivel === "ATENDIMENTO") {
-                    document.getElementById('btn-v-exp').style.display = 'none';
-                } else if (res.nivel === "ADMIN") {
+                
+                if (res.nivel === "ADMIN") {
                     document.getElementById('btn-planilha').style.display = 'inline-block';
-                    document.getElementById('btn-v-exp').style.display = 'inline-block';
                 }
-        
+
+                // SÓ CARREGA OS DADOS APÓS O LOGIN
+                await carregarClientes();
                 changeView('v-dash');
             } else {
                 alert("Usuário ou senha incorretos.");
             }
-        } catch (err) { 
-            alert("Erro de conexão."); 
-        }
+        } catch (err) { alert("Erro de conexão."); }
         esconderLoader();
     }
+
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -183,6 +166,7 @@
     }
 
     async function carregar() {
+        if(!usuarioLogado) return; // Segurança: não carrega sem login
         mostrarLoader("Atualizando monitor...");
         try {
             const r = await fetch(URL);
@@ -205,75 +189,37 @@
         document.getElementById('at-nome').value = cliente ? cliente.nome : "Cliente não encontrado";
     }
 
-    async function enviarAtend() {
-        const cod = document.getElementById('at-cod').value;
-        const nomeCli = document.getElementById('at-nome').value;
-        const idOpc = document.getElementById('at-id-opcional').value || "MANUAL";
-        if(!cod || nomeCli === "Cliente não encontrado") return alert("Código inválido!");
-
-        mostrarLoader("Solicitando...");
-        try {
-            await fetch(URL, {
-                method:'POST', 
-                body: JSON.stringify({ action: 'solicitar', codCliente: cod, idPedido: idOpc, solicitante: usuarioLogado })
-            });
-            alert("Solicitado!");
-            document.getElementById('at-cod').value = "";
-            document.getElementById('at-nome').value = "";
-            document.getElementById('at-id-opcional').value = "";
-            carregar();
-        } catch(e) { alert("Erro"); }
-        esconderLoader();
-    }
-
-    function filtrar(s, b) {
-        fAtual = s;
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-        b.classList.add('active');
-        render();
-    }
-
     function render() {
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
-        
-        // Remove acentos para o filtro funcionar (ex: LILÁS -> LILAS)
         const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+        // O GAS envia os dados agora com uma coluna extra [7] que diz se está atrasado
         dados.slice(1).forEach(row => {
             if (row[4] !== "Pendente") return;
             
             let setorNome = (row[3] || "GERAL").toUpperCase();
             const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            
             if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
 
-            // TRATAMENTO DA DATA E HORA
+            const isAtrasado = row[7] === true; // Pega a marcação de 48h do backend
             const dataSolic = new Date(row[1]);
-            // Formata para DD/MM
             const diaMes = dataSolic.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-            // Formata para HH:mm
             const horaMin = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             
             const infoCli = listaClientes.find(c => c.codigo.toString() === row[2].toString());
             const nomeExibir = infoCli ? infoCli.nome : "Cliente " + row[2];
 
             grid.innerHTML += `
-                <div class="card-p">
-                    <div class="tag ${getCor(sLimpo)}">${setorNome}</div>
+                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}">
+                    <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
                     <div style="padding:12px">
                         <b style="color: #000; font-size: 1.05rem; display: block; margin-bottom: 2px;">${nomeExibir}</b>
                         <small style="color: #666;">Cód: ${row[2]}</small>
-                        
-                        <div style="font-size: 0.85rem; margin: 10px 0; color: #444; background: #fdfdfd; padding: 6px; border-radius: 6px; border-left: 4px solid #333; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.05);">
+                        <div style="font-size: 0.85rem; margin: 10px 0; color: #444; background: #fdfdfd; padding: 6px; border-radius: 6px; border-left: 4px solid #333;">
                             📦 <b>IDs:</b> ${row[5] || "Manual"}
                         </div>
-                        
-                        <div style="font-size: 0.75rem; color: #777; margin-bottom: 10px;">
-                            👤 Solicitante: <b>${row[6] || "Sistema"}</b>
-                        </div>
-                        
-                        <div style="text-align:right; font-size: 0.8rem; font-weight: bold; color: #222; border-top: 1px dashed #ccc; pt: 5px; margin-top: 5px;">
+                        <div style="text-align:right; font-size: 0.8rem; font-weight: bold; color: ${isAtrasado ? 'red' : '#222'};">
                             📅 ${diaMes} às ${horaMin}
                         </div>
                     </div>
@@ -290,6 +236,7 @@
         return "";
     }
 
+    // ... (Demais funções vincularExp, uploadGaleria, confirmarSemFoto permanecem iguais)
     async function vincularExp() {
         const id = document.getElementById('exp-id').value;
         if(!id) return alert("Bipe o ID");
@@ -312,15 +259,11 @@
         if (!input.files[0]) return;
         const id = document.getElementById('exp-id').value;
         if(!id) { alert("Digite o ID primeiro!"); input.value = ""; return; }
-        
         mostrarLoader("Subindo imagem...");
         const reader = new FileReader();
         reader.onload = async function(e) {
             try {
-                await fetch(URL, {
-                    method: 'POST', 
-                    body: JSON.stringify({action: 'vincular_pedido', idPedido: id, foto: e.target.result})
-                });
+                await fetch(URL, { method: 'POST', body: JSON.stringify({action: 'vincular_pedido', idPedido: id, foto: e.target.result}) });
                 alert("Sucesso via Galeria!");
                 document.getElementById('exp-id').value = "";
                 carregar();
@@ -336,10 +279,7 @@
         if(!confirm("Confirmar sem foto?")) return;
         mostrarLoader("Processando...");
         try {
-            await fetch(URL, {
-                method: 'POST', 
-                body: JSON.stringify({ action: 'vincular_pedido', idPedido: id, foto: "SEM_FOTO" })
-            });
+            await fetch(URL, { method: 'POST', body: JSON.stringify({ action: 'vincular_pedido', idPedido: id, foto: "SEM_FOTO" }) });
             alert("Baixa realizada!");
             document.getElementById('exp-id').value = "";
             carregar();
@@ -354,28 +294,7 @@
         } catch (e) { alert("Câmera bloqueada."); }
     }
 
-    // Inicialização
-    carregarClientes().then(() => carregar());
-    // Detectar Enter no Login
-document.getElementById('pass').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') fazerLogin();
-});
-
-// Detectar Enter no Atendimento (Campo ID ou Código)
-document.getElementById('at-id-opcional').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') enviarAtend();
-});
-document.getElementById('at-cod').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        // Se der enter no código, ele foca no ID opcional antes de enviar
-        document.getElementById('at-id-opcional').focus();
-    }
-});
+    document.getElementById('pass').addEventListener('keypress', e => { if (e.key === 'Enter') fazerLogin(); });
 </script>
 </body>
 </html>
-
-
-
-
-
