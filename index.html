@@ -157,19 +157,22 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
         
-                // LÓGICA DE PERMISSÃO
                 if (res.nivel === "ATENDIMENTO") {
-                    document.getElementById('btn-v-exp').style.display = 'none'; // Esconde Expedição
+                    document.getElementById('btn-v-exp').style.display = 'none';
                 } else if (res.nivel === "ADMIN") {
                     document.getElementById('btn-planilha').style.display = 'inline-block';
                     document.getElementById('btn-v-exp').style.display = 'inline-block';
                 }
         
                 changeView('v-dash');
-            } catch (err) { alert("Erro de conexão."); }
-                esconderLoader();
+            } else {
+                alert("Usuário ou senha incorretos.");
             }
-
+        } catch (err) { 
+            alert("Erro de conexão."); 
+        }
+        esconderLoader();
+    }
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -371,6 +374,7 @@ document.getElementById('at-cod').addEventListener('keypress', function (e) {
 </script>
 </body>
 </html>
+
 
 
 
