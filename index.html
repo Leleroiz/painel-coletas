@@ -35,10 +35,41 @@
 
         input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #000; border-radius: 8px; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* Estilo do Loader / Popup de Carregamento */
+        #loader-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 9999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        }
+        .spinner {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid var(--accent);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+        }
+        @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+        }
+        
     </style>
 </head>
 <body>
-
+<div id="loader-overlay">
+    <div class="spinner"></div>
+    <span id="loader-text">Carregando...</span>
+</div>
 <div id="login-screen">
     <div class="card" style="width: 280px;">
         <h3 style="text-align:center">LOGIN LABLOG</h3>
@@ -96,6 +127,8 @@
         <button class="btn" style="background:#2196F3; margin-bottom: 10px;" onclick="vincularExp()">📸 Confirmar pela Câmera</button>
 
         <button class="btn" style="background:#4CAF50" onclick="document.getElementById('file-input').click()">📁 Escolher da Galeria</button>
+
+        <button class="btn" style="background:#f44336; margin-top: 10px;" onclick="confirmarSemFoto()">⚠️ Confirmar Sem Foto</button>
         
         <input type="file" id="file-input" accept="image/*" style="display:none" onchange="uploadGaleria(this)">
     </div>
@@ -263,6 +296,31 @@ async function enviarAtend() {
     carregar();
 }
 
+    async function confirmarSemFoto() {
+    const id = document.getElementById('exp-id').value;
+    if(!id) return alert("Digite o ID ou Código do Cliente!");
+
+    if(!confirm("Deseja confirmar o recebimento SEM FOTO?")) return;
+
+    mostrarLoader("Registrando entrada...");
+    try {
+        await fetch(URL, {
+            method: 'POST', 
+            body: JSON.stringify({
+                action: 'vincular_pedido', 
+                idPedido: id, 
+                foto: "SEM_FOTO" // Enviamos um texto fixo em vez da imagem
+            })
+        });
+        alert("Baixa realizada sem foto!");
+        document.getElementById('exp-id').value = "";
+        carregar();
+    } catch(e) {
+        alert("Erro ao processar.");
+    }
+    esconderLoader();
+}
+    
     async function startVid() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
@@ -284,6 +342,15 @@ async function enviarAtend() {
         document.getElementById('exp-id').value = "";
         carregar();
     }
+        function mostrarLoader(texto) {
+    document.getElementById('loader-text').innerText = texto || "Carregando...";
+    document.getElementById('loader-overlay').style.display = 'flex';
+    }
+
+function esconderLoader() {
+    document.getElementById('loader-overlay').style.display = 'none';
+    }
+    
     async function uploadGaleria(input) {
     if (input.files && input.files[0]) {
         const id = document.getElementById('exp-id').value;
