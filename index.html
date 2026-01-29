@@ -110,11 +110,12 @@
 </div>
 
 <script>
-    const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; // MANTENHA A SUA URL
+    const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
     let dados = [];
     let listaClientes = [];
     let usuarioLogado = "";
     let fAtual = "TODOS";
+    let streamGlobal = null; // Variável para controle da câmera
 
     function mostrarLoader(texto) {
         document.getElementById('loader-text').innerText = texto || "Carregando...";
@@ -125,11 +126,57 @@
         document.getElementById('loader-overlay').style.display = 'none';
     }
 
+    // --- CÂMERA E VÍDEO ---
+    async function startVid() {
+        stopVid(); // Garante que não há outra instância aberta
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
+            });
+            streamGlobal = stream;
+            const vidElement = document.getElementById('vid');
+            vidElement.srcObject = stream;
+            await vidElement.play();
+        } catch (e) { 
+            console.error("Erro câmera:", e);
+            alert("Câmera bloqueada ou não encontrada."); 
+        }
+    }
+
+    function stopVid() {
+        if (streamGlobal) {
+            streamGlobal.getTracks().forEach(track => track.stop());
+            streamGlobal = null;
+        }
+        const vidElement = document.getElementById('vid');
+        if (vidElement) {
+            vidElement.pause();
+            vidElement.srcObject = null;
+            vidElement.load(); // Força o reset do hardware no mobile
+        }
+    }
+
+    // --- NAVEGAÇÃO ---
+    function changeView(id) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('btn-'+id).classList.add('active');
+        
+        if(id === 'v-exp') {
+            startVid(); 
+        } else {
+            stopVid(); // Desliga ao sair da aba expedição
+        }
+
+        if(id === 'v-dash') carregar();
+    }
+
+    // --- LOGIN ---
     async function fazerLogin() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
         if (!u || !p) return alert("Preencha tudo");
-
         mostrarLoader("Autenticando...");
         try {
             const response = await fetch(URL, {
@@ -141,12 +188,7 @@
                 usuarioLogado = u;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
-                
-                if (res.nivel === "ADMIN") {
-                    document.getElementById('btn-planilha').style.display = 'inline-block';
-                }
-
-                // SÓ CARREGA OS DADOS APÓS O LOGIN
+                if (res.nivel === "ADMIN") document.getElementById('btn-planilha').style.display = 'inline-block';
                 await carregarClientes();
                 changeView('v-dash');
             } else {
@@ -156,24 +198,9 @@
         esconderLoader();
     }
 
-    function changeView(id) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.getElementById('btn-'+id).classList.add('active');
-        
-        // Gerenciamento Inteligente da Câmera
-        if(id === 'v-exp') {
-            startVid(); // Liga a câmera apenas se for para Expedição
-        } else {
-            stopVid(); // Desliga a câmera imediatamente se for para qualquer outra tela
-        }
-
-        if(id === 'v-dash') carregar();
-    }
-
+    // --- DADOS E MONITOR ---
     async function carregar() {
-        if(!usuarioLogado) return; // Segurança: não carrega sem login
+        if(!usuarioLogado) return;
         mostrarLoader("Atualizando monitor...");
         try {
             const r = await fetch(URL);
@@ -200,23 +227,17 @@
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
         const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-        // O GAS envia os dados agora com uma coluna extra [7] que diz se está atrasado
         dados.slice(1).forEach(row => {
             if (row[4] !== "Pendente") return;
-            
             let setorNome = (row[3] || "GERAL").toUpperCase();
             const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
-
-            const isAtrasado = row[7] === true; // Pega a marcação de 48h do backend
+            const isAtrasado = row[7] === true;
             const dataSolic = new Date(row[1]);
             const diaMes = dataSolic.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
             const horaMin = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            
             const infoCli = listaClientes.find(c => c.codigo.toString() === row[2].toString());
             const nomeExibir = infoCli ? infoCli.nome : "Cliente " + row[2];
-
             grid.innerHTML += `
                 <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}">
                     <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
@@ -243,23 +264,39 @@
         return "";
     }
 
-    // ... (Demais funções vincularExp, uploadGaleria, confirmarSemFoto permanecem iguais)
+    function filtrar(setor, btn) {
+        fAtual = setor;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        render();
+    }
+
+    // --- EXPEDIÇÃO E BAIXA ---
     async function vincularExp() {
         const id = document.getElementById('exp-id').value;
         if(!id) return alert("Bipe o ID");
-        mostrarLoader("Enviando foto...");
-        const canv = document.getElementById('canv');
+        
         const vid = document.getElementById('vid');
-        canv.width = vid.videoWidth; canv.height = vid.videoHeight;
+        const canv = document.getElementById('canv');
+        
+        mostrarLoader("Capturando foto...");
+        canv.width = vid.videoWidth; 
+        canv.height = vid.videoHeight;
         canv.getContext('2d').drawImage(vid, 0, 0);
         const foto = canv.toDataURL('image/jpeg', 0.5);
+
+        // DESLIGA A CÂMERA IMEDIATAMENTE PARA LIBERAR O CELULAR
+        stopVid(); 
+
+        mostrarLoader("Enviando baixa...");
         try {
             await fetch(URL, {method:'POST', body: JSON.stringify({action:'vincular_pedido', idPedido:id, foto:foto})});
             alert("Sucesso!");
-            stopVid();
             document.getElementById('exp-id').value = "";
-            carregar();
-        } catch(e) { alert("Erro"); }
+            changeView('v-dash');
+        } catch(e) { 
+            alert("Erro no envio, mas a baixa pode ter ocorrido. Verifique o monitor."); 
+        }
         esconderLoader();
     }
 
@@ -286,75 +323,50 @@
         if(!id) return alert("Digite o ID ou Código!");
         if(!confirm("Confirmar sem foto?")) return;
         mostrarLoader("Processando...");
+        stopVid(); // Desliga a cam por segurança
         try {
             await fetch(URL, { method: 'POST', body: JSON.stringify({ action: 'vincular_pedido', idPedido: id, foto: "SEM_FOTO" }) });
             alert("Baixa realizada!");
             document.getElementById('exp-id').value = "";
-            carregar();
+            changeView('v-dash');
         } catch(e) { alert("Erro"); }
         esconderLoader();
     }
 
-    async function startVid() {
+    // --- ATENDIMENTO ---
+    async function enviarAtend() {
+        const cod = document.getElementById('at-cod').value;
+        const ids = document.getElementById('at-id-opcional').value;
+        const nome = document.getElementById('at-nome').value;
+        if (!cod || nome === "Cliente não encontrado") return alert("Selecione um cliente válido");
+        mostrarLoader("Enviando solicitação...");
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-            document.getElementById('vid').srcObject = stream;
-        } catch (e) { alert("Câmera bloqueada."); }
-    }
-
-    function stopVid() {
-        if (streamGlobal) {
-            // Desliga cada rastro de hardware (luz da câmera apaga)
-            streamGlobal.getTracks().forEach(track => track.stop());
-            streamGlobal = null;
-            document.getElementById('vid').srcObject = null;
-        }
+            const response = await fetch(URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'solicitar',
+                    codCliente: cod,
+                    idPedido: ids,
+                    solicitante: usuarioLogado
+                })
+            });
+            const res = await response.json();
+            if (res.sucesso) {
+                alert("Solicitação enviada!");
+                document.getElementById('at-cod').value = "";
+                document.getElementById('at-id-opcional').value = "";
+                document.getElementById('at-nome').value = "";
+                changeView('v-dash');
+            }
+        } catch (e) { alert("Erro ao enviar."); }
+        esconderLoader();
     }
 
     document.getElementById('pass').addEventListener('keypress', e => { if (e.key === 'Enter') fazerLogin(); });
-
-    async function enviarAtend() {
-    const cod = document.getElementById('at-cod').value;
-    const ids = document.getElementById('at-id-opcional').value;
-    const nome = document.getElementById('at-nome').value;
-
-    if (!cod || nome === "Cliente não encontrado") return alert("Selecione um cliente válido");
-
-    mostrarLoader("Enviando solicitação...");
-    try {
-        const response = await fetch(URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'solicitar',
-                codCliente: cod,
-                idPedido: ids,
-                solicitante: usuarioLogado
-            })
-        });
-        const res = await response.json();
-        if (res.sucesso) {
-            alert("Solicitação enviada!");
-            document.getElementById('at-cod').value = "";
-            document.getElementById('at-id-opcional').value = "";
-            document.getElementById('at-nome').value = "";
-            changeView('v-dash');
-        }
-    } catch (e) {
-        alert("Erro ao enviar. Verifique a conexão.");
-    }
-    esconderLoader();
-}
-
-// Adicione também a função de filtro que faltava para os botões do monitor
-function filtrar(setor, btn) {
-    fAtual = setor;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    render();
-}
 </script>
 </body>
 </html>
+
 
 
 
