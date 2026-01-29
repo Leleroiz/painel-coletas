@@ -88,52 +88,41 @@
 </div>
 
 <script>
-    const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; // <--- COLOQUE SUA URL AQUI
+    const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
     let dados = [];
     let fAtual = "TODOS";
 
     async function fazerLogin() {
-    console.log("Tentando logar...");
-    alert("Botão clicado! Verificando dados..."); // Se isso aparecer, o HTML está ok.
+        const campoUser = document.getElementById('user');
+        const campoPass = document.getElementById('pass');
+        if (!campoUser || !campoPass) return;
 
-    const campoUser = document.getElementById('user');
-    const campoPass = document.getElementById('pass');
-    
-    if (!campoUser || !campoPass) {
-        alert("Erro: Campos de usuário ou senha não encontrados no HTML!");
-        return;
-    }
+        const u = campoUser.value;
+        const p = campoPass.value;
 
-    const u = campoUser.value;
-    const p = campoPass.value;
+        try {
+            const response = await fetch(URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'login', user: u, pass: p })
+            });
+            const res = await response.json();
 
-    try {
-        const response = await fetch(URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'login', user: u, pass: p })
-        });
-        
-        const res = await response.json();
-
-        if (res.sucesso) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-nav').style.display = 'flex';
-            
-            // Verifica o botão da planilha
-            const btnP = document.getElementById('btn-planilha');
-            if (res.nivel === "ADMIN" && btnP) {
-                btnP.style.display = 'inline-block';
+            if (res.sucesso) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-nav').style.display = 'flex';
+                const btnP = document.getElementById('btn-planilha');
+                if (res.nivel === "ADMIN" && btnP) {
+                    btnP.style.display = 'inline-block';
+                }
+                changeView('v-dash');
+            } else {
+                alert("Usuário ou senha incorretos.");
             }
-            
-            changeView('v-dash');
-        } else {
-            alert("Usuário ou senha incorretos.");
+        } catch (err) {
+            alert("Erro de conexão: " + err.message);
         }
-    } catch (err) {
-        console.error(err);
-        alert("Erro técnico: " + err.message);
     }
-}
+
     function changeView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -144,9 +133,11 @@
     }
 
     async function carregar() {
-        const r = await fetch(URL);
-        dados = await r.json();
-        render();
+        try {
+            const r = await fetch(URL);
+            dados = await r.json();
+            render();
+        } catch (e) { console.error("Erro ao carregar dados"); }
     }
 
     function filtrar(s, b) {
@@ -156,63 +147,67 @@
         render();
     }
 
-function renderizarCards() {
-    const grid = document.getElementById('grid-monitor'); // ou o ID do seu grid
-    grid.innerHTML = "";
-    
-    // --- NOVO TRECHO PARA RENDERIZAR OS CARDS ---
-dadosGlobais.slice(1).forEach(row => {
-    // 1. Só mostra se o status (Coluna E / índice 4) for Pendente
-    if (row[4] !== "Pendente") return;
+    function render() {
+        const grid = document.getElementById('grid');
+        if (!grid) return;
+        grid.innerHTML = "";
+        
+        // Remove acentos para comparar filtros (LILÁS vs LILAS)
+        const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    // 2. Lógica de Horário (Coluna B / índice 1)
-    const dataSolic = new Date(row[1]);
-    const horario = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const dataTexto = dataSolic.toLocaleDateString('pt-BR');
+        dados.slice(1).forEach(row => {
+            if (row[4] !== "Pendente") return;
 
-    // 3. Lógica de IDs (Coluna F / índice 5)
-    const idsPendentes = row[5] || "Solicitação Manual";
+            let setorNome = (row[3] || "GERAL").toUpperCase();
+            const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    // 4. Lógica de Filtro de Setor
-    let setorNome = row[3].toUpperCase();
-    if (filtroAtual !== "TODOS" && !setorNome.includes(filtroAtual)) return;
+            if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
 
-    // 5. Definição da Cor (Baseado no seu CSS)
-    let corClasse = "tag-padrao"; 
-    if (setorNome.includes("CORAL")) corClasse = "tag-coral";
-    else if (setorNome.includes("LILAS")) corClasse = "tag-lilas";
-    else if (setorNome.includes("BEGE")) corClasse = "tag-bege";
-    else if (setorNome.includes("AMARELO")) corClasse = "tag-amarelo";
-    else if (setorNome.includes("ROSA")) corClasse = "tag-rosa";
+            const dataSolic = new Date(row[1]);
+            const horario = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const dataTexto = dataSolic.toLocaleDateString('pt-BR');
+            const idsPendentes = row[5] || "Solicitação Manual";
 
-    // Monta o Card no Grid
-    grid.innerHTML += `
-        <div class="card-p">
-            <div class="tag ${corClasse}">${setorNome}</div>
-            <div style="padding:10px">
-                <b>Cód: ${row[2]}</b><br>
-                <div style="font-size: 0.8rem; margin: 5px 0; color: #555;">
-                    <strong>Pedidos:</strong> ${idsPendentes}
-                </div>
-                <small>⏰ ${dataTexto} às ${horario}</small>
-            </div>
-        </div>`;
-});
+            let corClasse = ""; 
+            if (sLimpo.includes("CORAL")) corClasse = "c-coral";
+            else if (sLimpo.includes("LILAS")) corClasse = "c-lilas";
+            else if (sLimpo.includes("BEGE")) corClasse = "c-bege";
+            else if (sLimpo.includes("AMARELO")) corClasse = "c-amarelo";
+            else if (sLimpo.includes("ROSA")) corClasse = "c-rosa";
+
+            grid.innerHTML += `
+                <div class="card-p">
+                    <div class="tag ${corClasse}">${setorNome}</div>
+                    <div style="padding:10px">
+                        <b>Cód: ${row[2]}</b><br>
+                        <div style="font-size: 0.8rem; margin: 5px 0; color: #555;">
+                            <strong>Pedidos:</strong> ${idsPendentes}
+                        </div>
+                        <small>⏰ ${dataTexto} às ${horario}</small>
+                    </div>
+                </div>`;
+        });
+    }
 
     async function enviarAtend() {
         const cod = document.getElementById('at-cod').value;
+        if(!cod) return alert("Digite o código");
         await fetch(URL, {method:'POST', body: JSON.stringify({action:'solicitar', codCliente:cod})});
         alert("Enviado!");
+        document.getElementById('at-cod').value = "";
         carregar();
     }
 
     async function startVid() {
-        const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-        document.getElementById('vid').srcObject = stream;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+            document.getElementById('vid').srcObject = stream;
+        } catch (e) { alert("Câmera não permitida."); }
     }
 
     async function vincularExp() {
         const id = document.getElementById('exp-id').value;
+        if(!id) return alert("Bipe o ID");
         const canv = document.getElementById('canv');
         const vid = document.getElementById('vid');
         canv.width = vid.videoWidth; canv.height = vid.videoHeight;
@@ -221,15 +216,7 @@ dadosGlobais.slice(1).forEach(row => {
         
         await fetch(URL, {method:'POST', body: JSON.stringify({action:'vincular_pedido', idPedido:id, foto:foto})});
         alert("Sucesso!");
+        document.getElementById('exp-id').value = "";
         carregar();
     }
 </script>
-</body>
-</html>
-
-
-
-
-
-
-
