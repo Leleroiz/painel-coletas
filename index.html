@@ -353,9 +353,25 @@
 
     // Inicialização
     carregarClientes().then(() => carregar());
+    // Detectar Enter no Login
+document.getElementById('pass').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') fazerLogin();
+});
+
+// Detectar Enter no Atendimento (Campo ID ou Código)
+document.getElementById('at-id-opcional').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') enviarAtend();
+});
+document.getElementById('at-cod').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        // Se der enter no código, ele foca no ID opcional antes de enviar
+        document.getElementById('at-id-opcional').focus();
+    }
+});
 </script>
 </body>
 </html>
+
 
 
 
