@@ -133,45 +133,44 @@ function renderizarCards() {
     const grid = document.getElementById('grid-monitor'); // ou o ID do seu grid
     grid.innerHTML = "";
     
-    // Pula o cabeçalho e filtra apenas o que deve aparecer
-    dadosGlobais.slice(1).forEach(row => {
-        // Lógica de Horário
-        const dataSolic = new Date(row[1]);
-        const horario = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const dataTexto = dataSolic.toLocaleDateString('pt-BR');
+    // --- NOVO TRECHO PARA RENDERIZAR OS CARDS ---
+dadosGlobais.slice(1).forEach(row => {
+    // 1. Só mostra se o status (Coluna E / índice 4) for Pendente
+    if (row[4] !== "Pendente") return;
 
-        // Lógica de IDs (Coluna F é o índice 5)
-        const idsPendentes = row[5] || ""; 
-        
-        // REGRA: Se não tem ID e é automático, não mostra o card
-        if (!idsPendentes && row[0].toString().includes("AUTO")) return;
+    // 2. Lógica de Horário (Coluna B / índice 1)
+    const dataSolic = new Date(row[1]);
+    const horario = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dataTexto = dataSolic.toLocaleDateString('pt-BR');
 
-        // Lógica de Cores (ajuste conforme o nome das suas classes CSS)
-        let setorNome = row[3].toUpperCase();
-        let corClasse = "tag-padrao"; 
-        if (setorNome.includes("CORAL")) corClasse = "tag-coral";
-        else if (setorNome.includes("LILAS")) corClasse = "tag-lilas";
-        else if (setorNome.includes("BEGE")) corClasse = "tag-bege";
-        else if (setorNome.includes("AMARELO")) corClasse = "tag-amarelo";
-        else if (setorNome.includes("ROSA")) corClasse = "tag-rosa";
+    // 3. Lógica de IDs (Coluna F / índice 5)
+    const idsPendentes = row[5] || "Solicitação Manual";
 
-        // Filtro de Setor
-        if (filtroAtual !== "TODOS" && !setorNome.includes(filtroAtual)) return;
+    // 4. Lógica de Filtro de Setor
+    let setorNome = row[3].toUpperCase();
+    if (filtroAtual !== "TODOS" && !setorNome.includes(filtroAtual)) return;
 
-        // Criar o Card
-        grid.innerHTML += `
-            <div class="card-p">
-                <div class="tag ${corClasse}">${setorNome}</div>
-                <div style="padding:10px">
-                    <b>Cód: ${row[2]}</b><br>
-                    <div style="font-size: 0.85rem; margin: 5px 0;">
-                        <strong>IDs:</strong> ${idsPendentes}
-                    </div>
-                    <small>📅 ${dataTexto} às ${horario}</small>
+    // 5. Definição da Cor (Baseado no seu CSS)
+    let corClasse = "tag-padrao"; 
+    if (setorNome.includes("CORAL")) corClasse = "tag-coral";
+    else if (setorNome.includes("LILAS")) corClasse = "tag-lilas";
+    else if (setorNome.includes("BEGE")) corClasse = "tag-bege";
+    else if (setorNome.includes("AMARELO")) corClasse = "tag-amarelo";
+    else if (setorNome.includes("ROSA")) corClasse = "tag-rosa";
+
+    // Monta o Card no Grid
+    grid.innerHTML += `
+        <div class="card-p">
+            <div class="tag ${corClasse}">${setorNome}</div>
+            <div style="padding:10px">
+                <b>Cód: ${row[2]}</b><br>
+                <div style="font-size: 0.8rem; margin: 5px 0; color: #555;">
+                    <strong>Pedidos:</strong> ${idsPendentes}
                 </div>
-            </div>`;
-    });
-}
+                <small>⏰ ${dataTexto} às ${horario}</small>
+            </div>
+        </div>`;
+});
 
     async function enviarAtend() {
         const cod = document.getElementById('at-cod').value;
@@ -200,6 +199,7 @@ function renderizarCards() {
 </script>
 </body>
 </html>
+
 
 
 
