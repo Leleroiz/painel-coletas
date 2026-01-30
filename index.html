@@ -78,6 +78,15 @@
             <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
             <button class="filter-btn" style="background: #2196F3; color: white; border-color: #0d47a1;" onclick="carregar()">🔄 Atualizar</button>
         </div>
+        <div id="admin-bulk-actions" style="display: none; background: white; border: 2px solid #2e7d32; border-radius: 10px; padding: 10px; margin-bottom: 20px; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 0.9rem;">
+                <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)" style="width: 22px; height: 22px; margin: 0; cursor: pointer;">
+                <label for="select-all" style="cursor: pointer;">Todos</label>
+            </div>
+            <button class="btn" style="background: #2e7d32; margin: 0; flex: 1; padding: 10px; font-size: 0.8rem;" onclick="enviarRotaEmLote()">
+                🚚 INICIAR ROTA DOS SELECIONADOS
+            </button>
+        </div>
         <div id="grid" class="grid-monitor"></div>
     </div>
 
@@ -241,6 +250,7 @@ function render() {
 
         let botaoRotaHtml = "";
         let cardStyle = "";
+        let checkboxHtml = "";
         
         if (dataRota) {
             // Estilo para quando já está em rota
@@ -261,30 +271,38 @@ function render() {
                 </button>`;
         }
 
-        grid.innerHTML += `
-            <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
-                <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
-                <div style="padding:12px">
-                    <b style="font-size: 1.1rem; display: block; color: #000; margin-bottom: 4px;">${nomeExibir}</b>
-                    <small style="color: #666;">Cód: ${codCli}</small>
-                    
-                    <div style="margin-top: 10px; color: #007bff; font-weight: bold; font-size: 0.85rem;">
-                        👤 Solicitado por: ${solicitante}
-                    </div>
-                    
-                    <div style="font-size: 0.8rem; margin: 10px 0; padding: 8px; background: #f1f1f1; border-left: 3px solid #333; border-radius: 4px;">
-                        📦 IDs: ${row[5]}
-                    </div>
-
-                    ${botaoRotaHtml}
-
-                    <div style="text-align:right; font-size: 0.7rem; color: #888; margin-top: 8px;">
-                        Criado em: ${diaMes} às ${horaMin}
-                    </div>
-                </div>
-            </div>`;
-    });
+        // Substitua o trecho final da função render() por este:
+let checkboxHtml = "";
+if (usuarioLogadoNivel === "ADMIN" && !dataRota) {
+    checkboxHtml = `
+    <div style="position: absolute; top: 8px; right: 45%; z-index: 10;">
+        <input type="checkbox" class="select-item" value="${row[0]}" style="width: 22px; height: 22px; cursor: pointer; accent-color: #2e7d32;">
+    </div>`;
 }
+
+grid.innerHTML += `
+    <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
+        ${checkboxHtml}
+        <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
+        <div style="padding:12px; position: relative;">
+            <b style="font-size: 1.1rem; display: block; color: #000; margin-bottom: 4px;">${nomeExibir}</b>
+            <small style="color: #666;">Cód: ${codCli}</small>
+            
+            <div style="margin-top: 10px; color: #007bff; font-weight: bold; font-size: 0.85rem;">
+                👤 Solicitado por: ${solicitante}
+            </div>
+            
+            <div style="font-size: 0.8rem; margin: 10px 0; padding: 8px; background: #f1f1f1; border-left: 3px solid #333; border-radius: 4px;">
+                📦 IDs: ${row[5]}
+            </div>
+
+            ${botaoRotaHtml}
+
+            <div style="text-align:right; font-size: 0.7rem; color: #888; margin-top: 8px;">
+                Criado em: ${diaMes} às ${horaMin}
+            </div>
+        </div>
+    </div>`;
 
     async function colocarEmRota(idSolicitacao) {
         if(!confirm("Confirmar que este malote saiu para entrega/coleta? O prazo de 48h será reiniciado.")) return;
@@ -463,6 +481,43 @@ function render() {
         if(inExp) inExp.value = "";
         renderizarListaIds();
     }
+
+        function toggleSelectAll(master) {
+    const checks = document.querySelectorAll('.select-item');
+    checks.forEach(c => c.checked = master.checked);
+}
+
+async function enviarRotaEmLote() {
+    const selecionados = Array.from(document.querySelectorAll('.select-item:checked')).map(cb => cb.value);
+    
+    if (selecionados.length === 0) return alert("Selecione ao menos um item!");
+    if (!confirm(`Deseja iniciar rota para ${selecionados.length} itens?`)) return;
+
+    mostrarLoader(`Iniciando rota de ${selecionados.length} itens...`);
+    try {
+        for (let id of selecionados) {
+            await fetch(URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'set_rota', idSolicitacao: id })
+            });
+            await sleep(500); // Evita sobrecarga
+        }
+        alert("Rota iniciada para todos os selecionados!");
+        carregar();
+    } catch (e) {
+        alert("Erro no processo em lote.");
+    }
+    esconderLoader();
+}
+
+// AJUSTE NO LOGIN: Adicione isso dentro da função fazerLogin, 
+// logo após o if (res.nivel === "ADMIN"):
+if (res.nivel === "ADMIN") {
+    document.getElementById('btn-planilha').style.display = 'inline-block';
+    document.getElementById('admin-bulk-actions').style.display = 'flex'; // Exibe a barra verde
+}
+        
 </script>
 </body>
 </html>
+
