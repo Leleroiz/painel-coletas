@@ -234,40 +234,46 @@
         const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         
         dados.slice(1).forEach(row => {
-            if (row[4] !== "Pendente") return;
-            
-            let setorNome = (row[3] || "GERAL").toUpperCase();
-            const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
+        if (row[4] !== "Pendente") return;
+        
+        let setorNome = (row[3] || "GERAL").toUpperCase();
+        const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
 
-            // BUSCA DE NOME AJUSTADA (Forçando ambos a String para garantir)
-            const codProcurado = String(row[2]).trim();
-            const infoCli = listaClientes.find(c => String(c.codigo).trim() === codProcurado);
-            
-            // Se achar o cliente usa o nome, se não achar, usa o que está na planilha ou "CLIENTE X"
-            const nomeExibir = infoCli ? infoCli.nome : "CLIENTE " + codProcurado;
-            
-            const isAtrasado = row[7] === true;
-            const dataSolic = new Date(row[1]);
-            const diaMes = dataSolic.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-            const horaMin = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        // Busca do Cliente (VIVIANE, etc)
+        const codProcurado = String(row[2]).trim();
+        const infoCli = listaClientes.find(c => String(c.codigo).trim() === codProcurado);
+        const nomeCliente = infoCli ? infoCli.nome : "CLIENTE " + codProcurado;
+        
+        // --- O QUE VOCÊ QUERIA: NOME DE QUEM SOLICITOU ---
+        // Na planilha o Solicitante está na Coluna G (índice 6)
+        const nomeSolicitante = row[6] || "Sistema"; 
 
-            grid.innerHTML += `
-                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}">
-                    <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
-                    <div style="padding:12px">
-                        <b style="color: #000; font-size: 1.05rem; display: block; margin-bottom: 2px;">${nomeExibir}</b>
-                        <small style="color: #666;">Cód: ${row[2]}</small>
-                        <div style="font-size: 0.85rem; margin: 10px 0; color: #444; background: #fdfdfd; padding: 6px; border-radius: 6px; border-left: 4px solid #333;">
-                            📦 <b>IDs:</b> ${row[5] || "Manual"}
-                        </div>
-                        <div style="text-align:right; font-size: 0.8rem; font-weight: bold; color: ${isAtrasado ? 'red' : '#222'};">
-                            📅 ${diaMes} às ${horaMin}
-                        </div>
+        const isAtrasado = row[7] === true;
+        const dataSolic = new Date(row[1]);
+        const diaMes = dataSolic.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const horaMin = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        grid.innerHTML += `
+            <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}">
+                <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
+                <div style="padding:12px">
+                    <b style="color: #000; font-size: 1.05rem; display: block; margin-bottom: 2px;">${nomeCliente}</b>
+                    <small style="color: #666;">Cód: ${row[2]}</small>
+                    
+                    <div style="margin-top: 5px; font-size: 0.8rem; color: #007bff; font-weight: bold;">
+                        👤 Solicitado por: ${nomeSolicitante}
                     </div>
-                </div>`;
-        });
-    }
+
+                    <div style="font-size: 0.85rem; margin: 10px 0; color: #444; background: #fdfdfd; padding: 6px; border-radius: 6px; border-left: 4px solid #333;">
+                        📦 <b>IDs:</b> ${row[5] || "Manual"}
+                    </div>
+                    <div style="text-align:right; font-size: 0.8rem; font-weight: bold; color: ${isAtrasado ? 'red' : '#222'};">
+                        📅 ${diaMes} às ${horaMin}
+                    </div>
+                </div>
+            </div>`;
+    });
     function getCor(s) {
         if (s.includes("CORAL")) return "c-coral";
         if (s.includes("LILAS")) return "c-lilas";
@@ -379,6 +385,7 @@
 </script>
 </body>
 </html>
+
 
 
 
