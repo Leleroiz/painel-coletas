@@ -78,6 +78,70 @@
             <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
             <button class="filter-btn" style="background: #2196F3; color: white; border-color: #0d47a1;" onclick="carregar()">🔄 Atualizar</button>
         </div>
+
+        <div id="area-acoes-admin" style="display:none; margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 8px; border: 2px solid #28a745; position: sticky; top: 10px; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <div style="display: flex; gap: 15px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <label style="font-weight: bold; font-size: 0.9rem; cursor: pointer; color: #333; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="select-all" onclick="selecionarTodos(this)" style="transform: scale(1.4);"> 
+                    Selecionar Todos
+                </label>
+                <button onclick="enviarRotaEmLote()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 0.9rem;">
+                    🚚 INICIAR ROTA DOS SELECIONADOS
+                </button>
+            </div>
+        </div>
+
+        <div id="grid" class="grid-monitor"></div>
+    </div>
+
+    <div id="v-atend" class="view">
+        <div class="card">
+            <h2>Atendimento 📞</h2>
+            <label>Código do Cliente:</label>
+            <input type="number" id="at-cod" placeholder="Ex: 123" oninput="buscarNomeCliente(this.value)">
+            <label>Nome do Cliente:</label>
+            <input type="text" id="at-nome" placeholder="Nome aparecerá aqui..." disabled style="background: #eee;">
+            <label>ID do Pedido (Opcional):</label>
+            <input type="text" id="at-id-opcional" placeholder="Ex: 999888">
+            <button class="btn" onclick="enviarAtend()">Solicitar Coleta</button>
+        </div>
+    </div>
+
+    <div id="v-exp" class="view">
+        <div class="card">
+            <h2>Expedição 🛵</h2>
+            <p>Escaneie ou digite os IDs dos malotes:</p>
+            <input type="text" id="exp-id" placeholder="ID do Pedido" onkeypress="if(event.key==='Enter') adicionarIdLista()">
+            <div id="lista-ids-exp" style="margin: 10px 0; display: flex; gap: 5px; flex-wrap: wrap;"></div>
+            
+            <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn" style="background:#607D8B" onclick="document.getElementById('file-input-lote').click()">📁 Galeria</button>
+                <button class="btn" style="background:#f44336;" onclick="limparLote()">🗑️ Limpar</button>
+            </div>
+            <button class="btn" style="margin-top:10px; background:#28a745" onclick="enviarLoteExpedicao()">🚀 Finalizar Lote (<span id="count-fotos">0</span> fotos)</button>
+            <input type="file" id="file-input-lote" accept="image/*" style="display:none" onchange="uploadGaleriaLote(this)">
+        </div>
+    </div>
+</div>
+
+<nav id="main-nav">
+    <button onclick="changeView('v-dash')" id="btn-v-dash">Monitor 🖥</button>
+    <button onclick="changeView('v-atend')" id="btn-v-atend">Atendimento 📞</button>
+    <button onclick="changeView('v-exp')" id="btn-v-exp">Expedição 🛵</button>
+    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit', '_blank')" id="btn-planilha" style="background-color: #2e7d32; display: none;">📊 Planilha</button>
+</nav>
+
+<div class="container">
+    <div id="v-dash" class="view">
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filtrar('TODOS', this)">TODOS</button>
+            <button class="filter-btn" onclick="filtrar('CORAL', this)">CORAL</button>
+            <button class="filter-btn" onclick="filtrar('LILAS', this)">LILÁS</button>
+            <button class="filter-btn" onclick="filtrar('BEGE', this)">BEGE</button>
+            <button class="filter-btn" onclick="filtrar('AMARELO', this)">AMARELO</button>
+            <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
+            <button class="filter-btn" style="background: #2196F3; color: white; border-color: #0d47a1;" onclick="carregar()">🔄 Atualizar</button>
+        </div>
         <div id="area-acoes-admin" style="display:none; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; position: sticky; top: 0; z-index: 100;">
     <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between;">
         <label style="font-weight: bold; font-size: 0.9rem; cursor: pointer; color: #333;">
@@ -523,6 +587,7 @@ async function enviarRotaEmLote() {
 </script>
 </body>
 </html>
+
 
 
 
