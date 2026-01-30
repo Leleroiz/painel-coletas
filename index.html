@@ -184,11 +184,21 @@
     }
 
     async function carregarClientes() {
-        try {
-            const r = await fetch(URL + "?action=getClientes");
-            listaClientes = await r.json();
-        } catch (e) { console.error("Erro clientes"); }
+    try {
+        console.log("Tentando carregar clientes de:", URL + "?action=getClientes");
+        const r = await fetch(URL + "?action=getClientes");
+        const data = await r.json();
+        
+        if (data && data.length > 0) {
+            listaClientes = data;
+            console.log("Clientes carregados com sucesso:", listaClientes.length);
+        } else {
+            console.warn("A lista de clientes voltou vazia do servidor.");
+        }
+    } catch (e) { 
+        console.error("Erro fatal ao carregar clientes:", e); 
     }
+}
 
     async function carregar() {
         if(!usuarioLogado) return;
@@ -335,9 +345,10 @@ function render() {
     }
 
     function buscarNomeCliente(codigo) {
-        const c = listaClientes.find(i => String(i.codigo).trim() === String(codigo).trim());
-        document.getElementById('at-nome').value = c ? c.nome : "Não encontrado";
-    }
+    const c = listaClientes.find(i => String(i.codigo).trim() === String(codigo).trim());
+    const display = document.getElementById('at-nome');
+    if (display) display.value = c ? c.nome : "Não encontrado";
+}
 
     async function enviarAtend() {
         const cod = document.getElementById('at-cod').value;
@@ -455,6 +466,7 @@ function render() {
 </script>
 </body>
 </html>
+
 
 
 
