@@ -107,27 +107,32 @@
         </div>
     </div>
 
-    <div id="v-exp" class="view">
-    <div class="card">
-        <h2>Expedição Pro 🛵</h2>
-        
-        <label>IDs dos Pedidos (Bipe e dê Enter):</label>
-        <div style="display: flex; gap: 5px;">
-            <input type="text" id="exp-id" placeholder="ID do Pedido..." onkeypress="if(event.key==='Enter') adicionarIdLista()">
-            <button class="btn" style="width: 60px; padding: 0;" onclick="adicionarIdLista()">➕</button>
+    <div class="container">
+    <div id="v-dash" class="view">
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filtrar('TODOS', this)">TODOS</button>
+            <button class="filter-btn" onclick="filtrar('CORAL', this)">CORAL</button>
+            <button class="filter-btn" onclick="filtrar('LILAS', this)">LILÁS</button>
+            <button class="filter-btn" onclick="filtrar('BEGE', this)">BEGE</button>
+            <button class="filter-btn" onclick="filtrar('AMARELO', this)">AMARELO</button>
+            <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
+            <button class="filter-btn" style="background: #2196F3; color: white; border-color: #0d47a1;" onclick="carregar()">🔄 Atualizar</button>
         </div>
-        
-        <div id="lista-ids-exp" style="display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; min-height: 30px; padding: 5px; border: 1px dashed #ccc; border-radius: 8px;">
-            </div>
 
-        <video id="vid" autoplay playsinline style="width:100%; border-radius:10px; background: #000;"></video>
-        <canvas id="canv" style="display:none"></canvas>
-        
-        <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="btn" style="background:#2196F3;" onclick="capturarFotoLote()">📸 Foto (<span id="count-fotos">0</span>)</button>
-            <button class="btn" style="background:#4CAF50" onclick="enviarLoteExpedicao()">🚀 Enviar Lote</button>
+        <div id="area-acoes-admin" style="display:none; margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 8px; border: 2px solid #28a745; position: sticky; top: 10px; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <div style="display: flex; gap: 15px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <label style="font-weight: bold; font-size: 0.9rem; cursor: pointer; color: #333; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="select-all" onclick="selecionarTodos(this)" style="transform: scale(1.4);"> 
+                    Selecionar Todos
+                </label>
+                <button onclick="enviarRotaEmLote()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 0.9rem;">
+                    🚚 INICIAR ROTA DOS SELECIONADOS
+                </button>
+            </div>
         </div>
-        
+
+        <div id="grid" class="grid-monitor"></div>
+    </div>
         <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <button class="btn" style="background:#607D8B" onclick="document.getElementById('file-input-lote').click()">📁 Galeria</button>
             <button class="btn" style="background:#f44336;" onclick="limparLote()">🗑️ Limpar</button>
@@ -518,6 +523,7 @@ async function enviarRotaEmLote() {
 </script>
 </body>
 </html>
+
 
 
 
