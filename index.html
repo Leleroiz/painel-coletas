@@ -260,9 +260,8 @@
         
         // --- O QUE VOCÊ QUERIA: NOME DE QUEM SOLICITOU ---
         // Na planilha o Solicitante está na Coluna G (índice 6)
-        const nomeSolicitante = row[6] || "Sistema"; 
-
-        const isAtrasado = row[7] === true;
+        const nomeSolicitante = row[6] || "Não informado"; 
+        const isAtrasado = row[7] === true; // O Apps Script que te passei coloca o Atrasado na posição 7
         const dataSolic = new Date(row[1]);
         const diaMes = dataSolic.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
         const horaMin = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -398,6 +397,7 @@
 </script>
 </body>
 </html>
+
 
 
 
