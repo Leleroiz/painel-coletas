@@ -78,6 +78,19 @@
             <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
             <button class="filter-btn" style="background: #2196F3; color: white; border-color: #0d47a1;" onclick="carregar()">🔄 Atualizar</button>
         </div>
+        <div id="area-acoes-admin" style="display:none; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; position: sticky; top: 0; z-index: 100;">
+    <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between;">
+        <label style="font-weight: bold; font-size: 0.9rem; cursor: pointer; color: #333;">
+            <input type="checkbox" id="select-all" onclick="selecionarTodos(this)" style="transform: scale(1.2); margin-right: 5px;"> 
+            Selecionar Todos
+        </label>
+        <button onclick="enviarRotaEmLote()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            🚚 INICIAR ROTA DOS SELECIONADOS
+        </button>
+    </div>
+</div>
+
+<div id="grid" class="grid-monitor"></div>
         <div id="grid" class="grid-monitor"></div>
     </div>
 
@@ -261,9 +274,16 @@ function render() {
                 </button>`;
         }
 
+        // --- LOGICA DO CHECKBOX PARA SELEÇÃO EM MASSA ---
+        const checkboxHtml = (usuarioLogadoNivel === "ADMIN" && !dataRota) ? 
+            `<input type="checkbox" class="sel-rota" value="${row[0]}" style="margin-right:10px; transform: scale(1.4); cursor: pointer;">` : "";
+
         grid.innerHTML += `
             <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
-                <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
+                <div class="tag ${getCor(sLimpo)}" style="display: flex; align-items: center; padding: 5px 10px;">
+                    ${checkboxHtml} 
+                    <span style="flex-grow:1">${setorNome} ${isAtrasado ? '⚠️' : ''}</span>
+                </div>
                 <div style="padding:12px">
                     <b style="font-size: 1.1rem; display: block; color: #000; margin-bottom: 4px;">${nomeExibir}</b>
                     <small style="color: #666;">Cód: ${codCli}</small>
@@ -463,9 +483,42 @@ function render() {
         if(inExp) inExp.value = "";
         renderizarListaIds();
     }
+
+    // Função para o checkbox "Selecionar Todos"
+function selecionarTodos(origem) {
+    const checkboxes = document.querySelectorAll('.sel-rota');
+    checkboxes.forEach(cb => cb.checked = origem.checked);
+}
+
+// Função que envia a lista de uma vez para o Google
+async function enviarRotaEmLote() {
+    const selecionados = Array.from(document.querySelectorAll('.sel-rota:checked')).map(cb => cb.value);
+    
+    if (selecionados.length === 0) return alert("❌ Selecione ao menos um malote!");
+    if (!confirm(`🚚 Confirmar saída de ${selecionados.length} malotes?`)) return;
+
+    if (typeof mostrarLoader === "function") mostrarLoader("Processando lote...");
+
+    try {
+        await fetch(URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'set_rota_multi', ids: selecionados })
+        });
+        
+        document.getElementById('select-all').checked = false;
+        alert("✅ Rota iniciada para todos os selecionados!");
+        await carregar(); // Recarrega a tela
+    } catch (e) {
+        alert("⚠️ Erro ao enviar. Verifique a internet.");
+    }
+    
+    if (typeof esconderLoader === "function") esconderLoader();
+}
+    
 </script>
 </body>
 </html>
+
 
 
 
