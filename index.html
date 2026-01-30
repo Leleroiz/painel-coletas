@@ -95,19 +95,26 @@
     </div>
 
     <div id="v-exp" class="view">
-        <div class="card">
-            <h2>Expedição</h2>
-            <input type="text" id="exp-id" placeholder="ID do Pedido ou Cód. Cliente">
-            <video id="vid" autoplay playsinline style="width:100%; border-radius:10px;"></video>
-            <canvas id="canv" style="display:none"></canvas>
-            <button class="btn" style="background:#2196F3; margin-bottom: 10px;" onclick="vincularExp()">📸 Confirmar pela Câmera</button>
-            <button class="btn" style="background:#4CAF50" onclick="document.getElementById('file-input').click()">📁 Escolher da Galeria</button>
-            <button class="btn" style="background:#f44336; margin-top: 10px;" onclick="confirmarSemFoto()">⚠️ Confirmar Sem Foto</button>
-            <input type="file" id="file-input" accept="image/*" style="display:none" onchange="uploadGaleria(this)">
+    <div class="card">
+        <h2>Expedição Pro 🛵</h2>
+        
+        <label>Escaneie ou digite os IDs (Enter para adicionar):</label>
+        <input type="text" id="exp-id" placeholder="ID do Pedido..." onkeypress="if(event.key==='Enter') adicionarIdLista()">
+        
+        <div id="lista-ids-exp" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
+            </div>
+
+        <video id="vid" autoplay playsinline style="width:100%; border-radius:10px; background: #000;"></video>
+        <canvas id="canv" style="display:none"></canvas>
+        
+        <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="btn" style="background:#2196F3;" onclick="capturarFotoLote()">📸 Tirar Foto (<span id="count-fotos">0</span>)</button>
+            <button class="btn" style="background:#4CAF50" onclick="enviarLoteExpedicao()">🚀 Enviar Lote</button>
         </div>
+        
+        <button class="btn" style="background:#f44336; margin-top: 10px;" onclick="limparLote()">🗑️ Limpar Tudo</button>
     </div>
 </div>
-
 <script>
     // TROQUE PELA SUA NOVA URL DE IMPLANTAÇÃO AQUI EMBAIXO:
     const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
@@ -311,3 +318,4 @@
 </script>
 </body>
 </html>
+
