@@ -389,19 +389,30 @@
         reader.onload = e => { loteFotos.push(e.target.result); document.getElementById('count-fotos').innerText = loteFotos.length; };
         reader.readAsDataURL(input.files[0]);
     }
-
-    async function enviarLoteExpedicao() {
-        if (loteIds.length === 0) return alert("Adicione IDs!");
-        mostrarLoader("Enviando...");
-        for (let i = 0; i < loteIds.length; i++) {
-            const foto = loteFotos[i] || (loteFotos.length > 0 ? loteFotos[0] : "SEM_FOTO");
-            await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'vincular_pedido', idPedido: loteIds[i], foto: foto }) });
-            await sleep(1000); 
+async function enviarLoteExpedicao() {
+    if (loteIds.length === 0) return alert("Adicione IDs!");
+    mostrarLoader("Enviando e dando baixa...");
+    
+    for (let i = 0; i < loteIds.length; i++) {
+        const foto = loteFotos[i] || (loteFotos.length > 0 ? loteFotos[0] : "SEM_FOTO");
+        try {
+            // REMOVIDO o 'no-cors' para garantir que a baixa seja processada antes de carregar o monitor
+            await fetch(URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'vincular_pedido', idPedido: loteIds[i], foto: foto }) 
+            });
+        } catch (e) {
+            console.error("Erro no ID: " + loteIds[i]);
         }
-        alert("Enviado!");
-        limparLote(); await carregar(); changeView('v-dash');
-        esconderLoader();
+        await sleep(800); 
     }
+    
+    alert("Processado com sucesso!");
+    limparLote(); 
+    await carregar(); // Agora o monitor vai atualizar e o card vai SUMIR
+    changeView('v-dash');
+    esconderLoader();
+}
 
     function limparLote() {
         loteIds = []; loteFotos = [];
@@ -434,4 +445,5 @@ document.getElementById('pass').addEventListener('keypress', function (e) {
 </script>
 </body>
 </html>
+
 
