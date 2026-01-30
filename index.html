@@ -174,30 +174,43 @@
 
     // --- LOGIN ---
     async function fazerLogin() {
-        const u = document.getElementById('user').value;
-        const p = document.getElementById('pass').value;
-        if (!u || !p) return alert("Preencha tudo");
+        const u = document.getElementById('user').value.trim();
+        const p = document.getElementById('pass').value.trim();
+        if (!u || !p) return alert("Preencha usuário e senha");
+        
         mostrarLoader("Autenticando...");
         try {
             const response = await fetch(URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'login', user: u, pass: p })
             });
+            
+            if (!response.ok) throw new Error("Erro na rede");
+            
             const res = await response.json();
+            
             if (res.sucesso) {
-                usuarioLogado = u;
+                usuarioLogado = u; // Matheus, Raquel, etc.
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
-                if (res.nivel === "ADMIN") document.getElementById('btn-planilha').style.display = 'inline-block';
                 
-                // IMPORTANTE: Primeiro carrega os clientes, DEPOIS muda a view (que chama o render)
+                if (res.nivel === "ADMIN") {
+                    document.getElementById('btn-planilha').style.display = 'inline-block';
+                }
+                
+                // IMPORTANTE: Carregar dados básicos antes de mudar de tela
                 await carregarClientes(); 
+                await carregar(); 
                 changeView('v-dash');
             } else {
                 alert("Usuário ou senha incorretos.");
             }
-        } catch (err) { alert("Erro de conexão."); }
-        esconderLoader();
+        } catch (err) { 
+            console.error(err);
+            alert("Erro de conexão com o servidor. Verifique se a URL do Script está correta."); 
+        } finally {
+            esconderLoader();
+        }
     }
 
     // --- DADOS E MONITOR ---
@@ -385,6 +398,7 @@
 </script>
 </body>
 </html>
+
 
 
 
