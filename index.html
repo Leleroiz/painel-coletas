@@ -189,7 +189,9 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
                 if (res.nivel === "ADMIN") document.getElementById('btn-planilha').style.display = 'inline-block';
-                await carregarClientes();
+                
+                // IMPORTANTE: Primeiro carrega os clientes, DEPOIS muda a view (que chama o render)
+                await carregarClientes(); 
                 changeView('v-dash');
             } else {
                 alert("Usuário ou senha incorretos.");
@@ -226,18 +228,27 @@
     function render() {
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
+        if (!dados || dados.length === 0) return;
+
         const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
         dados.slice(1).forEach(row => {
             if (row[4] !== "Pendente") return;
+            
             let setorNome = (row[3] || "GERAL").toUpperCase();
             const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
+
+            // BUSCA DE NOME MELHORADA
+            const codProcurado = row[2].toString().trim();
+            const infoCli = listaClientes.find(c => c.codigo.toString().trim() === codProcurado);
+            const nomeExibir = infoCli ? infoCli.nome : "CLIENTE " + codProcurado;
+            
             const isAtrasado = row[7] === true;
             const dataSolic = new Date(row[1]);
             const diaMes = dataSolic.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
             const horaMin = dataSolic.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            const infoCli = listaClientes.find(c => c.codigo.toString() === row[2].toString());
-            const nomeExibir = infoCli ? infoCli.nome : "Cliente " + row[2];
+
             grid.innerHTML += `
                 <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}">
                     <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
@@ -366,6 +377,7 @@
 </script>
 </body>
 </html>
+
 
 
 
