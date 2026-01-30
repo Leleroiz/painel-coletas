@@ -68,6 +68,7 @@
 </nav>
 
 <div class="container">
+    
     <div id="v-dash" class="view">
         <div class="filter-bar">
             <button class="filter-btn active" onclick="filtrar('TODOS', this)">TODOS</button>
@@ -122,100 +123,17 @@
             <input type="file" id="file-input-lote" accept="image/*" style="display:none" onchange="uploadGaleriaLote(this)">
         </div>
     </div>
+
 </div>
 
-<nav id="main-nav">
-    <button onclick="changeView('v-dash')" id="btn-v-dash">Monitor 🖥</button>
-    <button onclick="changeView('v-atend')" id="btn-v-atend">Atendimento 📞</button>
-    <button onclick="changeView('v-exp')" id="btn-v-exp">Expedição 🛵</button>
-    <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit', '_blank')" id="btn-planilha" style="background-color: #2e7d32; display: none;">📊 Planilha</button>
-</nav>
-
-<div class="container">
-    <div id="v-dash" class="view">
-        <div class="filter-bar">
-            <button class="filter-btn active" onclick="filtrar('TODOS', this)">TODOS</button>
-            <button class="filter-btn" onclick="filtrar('CORAL', this)">CORAL</button>
-            <button class="filter-btn" onclick="filtrar('LILAS', this)">LILÁS</button>
-            <button class="filter-btn" onclick="filtrar('BEGE', this)">BEGE</button>
-            <button class="filter-btn" onclick="filtrar('AMARELO', this)">AMARELO</button>
-            <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
-            <button class="filter-btn" style="background: #2196F3; color: white; border-color: #0d47a1;" onclick="carregar()">🔄 Atualizar</button>
-        </div>
-        <div id="area-acoes-admin" style="display:none; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; position: sticky; top: 0; z-index: 100;">
-    <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between;">
-        <label style="font-weight: bold; font-size: 0.9rem; cursor: pointer; color: #333;">
-            <input type="checkbox" id="select-all" onclick="selecionarTodos(this)" style="transform: scale(1.2); margin-right: 5px;"> 
-            Selecionar Todos
-        </label>
-        <button onclick="enviarRotaEmLote()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            🚚 INICIAR ROTA DOS SELECIONADOS
-        </button>
-    </div>
-</div>
-
-<div id="grid" class="grid-monitor"></div>
-        <div id="grid" class="grid-monitor"></div>
-    </div>
-
-    <div id="v-atend" class="view">
-        <div class="card">
-            <h2>Atendimento 📞</h2>
-            <label>Código do Cliente:</label>
-            <input type="number" id="at-cod" placeholder="Ex: 123" oninput="buscarNomeCliente(this.value)">
-            <label>Nome do Cliente:</label>
-            <input type="text" id="at-nome" placeholder="Nome aparecerá aqui..." disabled style="background: #eee;">
-            <label>ID do Pedido (Opcional):</label>
-            <input type="text" id="at-id-opcional" placeholder="Ex: 999888">
-            <button class="btn" onclick="enviarAtend()">Solicitar Coleta</button>
-        </div>
-    </div>
-
-    <div class="container">
-    <div id="v-dash" class="view">
-        <div class="filter-bar">
-            <button class="filter-btn active" onclick="filtrar('TODOS', this)">TODOS</button>
-            <button class="filter-btn" onclick="filtrar('CORAL', this)">CORAL</button>
-            <button class="filter-btn" onclick="filtrar('LILAS', this)">LILÁS</button>
-            <button class="filter-btn" onclick="filtrar('BEGE', this)">BEGE</button>
-            <button class="filter-btn" onclick="filtrar('AMARELO', this)">AMARELO</button>
-            <button class="filter-btn" onclick="filtrar('ROSA', this)">ROSA</button>
-            <button class="filter-btn" style="background: #2196F3; color: white; border-color: #0d47a1;" onclick="carregar()">🔄 Atualizar</button>
-        </div>
-
-        <div id="area-acoes-admin" style="display:none; margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 8px; border: 2px solid #28a745; position: sticky; top: 10px; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <div style="display: flex; gap: 15px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-                <label style="font-weight: bold; font-size: 0.9rem; cursor: pointer; color: #333; display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="select-all" onclick="selecionarTodos(this)" style="transform: scale(1.4);"> 
-                    Selecionar Todos
-                </label>
-                <button onclick="enviarRotaEmLote()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 0.9rem;">
-                    🚚 INICIAR ROTA DOS SELECIONADOS
-                </button>
-            </div>
-        </div>
-
-        <div id="grid" class="grid-monitor"></div>
-    </div>
-        <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="btn" style="background:#607D8B" onclick="document.getElementById('file-input-lote').click()">📁 Galeria</button>
-            <button class="btn" style="background:#f44336;" onclick="limparLote()">🗑️ Limpar</button>
-        </div>
-        
-        <input type="file" id="file-input-lote" accept="image/*" style="display:none" onchange="uploadGaleriaLote(this)">
-    </div>
-</div>
-</div>
 <script>
-    // TROQUE PELA SUA NOVA URL DE IMPLANTAÇÃO AQUI EMBAIXO:
     const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
     
     let dados = [];
     let listaClientes = [];
     let usuarioLogado = "";
-    let usuarioLogadoNivel = ""; // Variável para controle de acesso
+    let usuarioLogadoNivel = ""; 
     let fAtual = "TODOS";
-    let streamGlobal = null;
     let loteIds = [];
     let loteFotos = [];
 
@@ -245,14 +163,14 @@
             
             if (res.sucesso) {
                 usuarioLogado = u;
-                usuarioLogadoNivel = res.nivel; // Salva o nível (ADMIN ou USER)
+                usuarioLogadoNivel = res.nivel; 
                 
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
                 
-                // Exibe botão de planilha apenas para ADMIN
                 if (res.nivel === "ADMIN") {
                     document.getElementById('btn-planilha').style.display = 'inline-block';
+                    document.getElementById('area-acoes-admin').style.display = 'block';
                 }
                 
                 await carregarClientes(); 
@@ -266,21 +184,11 @@
     }
 
     async function carregarClientes() {
-    try {
-        console.log("Tentando carregar clientes de:", URL + "?action=getClientes");
-        const r = await fetch(URL + "?action=getClientes");
-        const data = await r.json();
-        
-        if (data && data.length > 0) {
-            listaClientes = data;
-            console.log("Clientes carregados com sucesso:", listaClientes.length);
-        } else {
-            console.warn("A lista de clientes voltou vazia do servidor.");
-        }
-    } catch (e) { 
-        console.error("Erro fatal ao carregar clientes:", e); 
+        try {
+            const r = await fetch(URL + "?action=getClientes");
+            listaClientes = await r.json();
+        } catch (e) { console.error("Erro ao carregar clientes", e); }
     }
-}
 
     async function carregar() {
         if(!usuarioLogado) return;
@@ -289,100 +197,82 @@
             const r = await fetch(URL);
             dados = await r.json();
             render();
-        } catch (e) { console.error("Erro ao carregar"); }
+        } catch (e) { console.error("Erro ao carregar dados"); }
         esconderLoader();
     }
 
-function render() {
-    const grid = document.getElementById('grid');
-    grid.innerHTML = "";
-    if (!dados || dados.length <= 1) return;
+    function render() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = "";
+        if (!dados || dados.length <= 1) return;
 
-    const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
-    dados.slice(1).forEach(row => {
-        if (row[4] !== "Pendente") return;
+        const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         
-        let setorNome = (row[3] || "GERAL").toUpperCase();
-        const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
-
-        // --- CORREÇÃO DO NOME DO CLIENTE ---
-        const codCli = String(row[2]).trim();
-        const cliente = listaClientes.find(c => String(c.codigo).trim() === codCli);
-        const nomeExibir = cliente ? cliente.nome : "CLIENTE " + codCli;
-        // -----------------------------------
-
-        const solicitante = row[6] || "Sistema";
-        const isAtrasado = row[7] === true;
-        const dataRota = row[8]; 
-
-        const dataSolic = new Date(row[1]);
-        const diaMes = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
-        const horaMin = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-
-        let botaoRotaHtml = "";
-        let cardStyle = "";
-        
-        if (dataRota) {
-            // Estilo para quando já está em rota
-            cardStyle = "border-left: 8px solid #FF9800; background: #FFF9F0;";
-            const dRota = new Date(dataRota);
-            const horaRota = dRota.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+        dados.slice(1).forEach(row => {
+            if (row[4] !== "Pendente") return;
             
-            botaoRotaHtml = `
-                <div style="font-size: 0.7rem; color: #E65100; font-weight: bold; margin-top: 10px; padding: 5px; border: 1px dashed #FF9800; border-radius: 5px; text-align: center;">
-                    🚚 EM ROTA: ${dRota.toLocaleDateString('pt-BR')} ${horaRota}
+            let setorNome = (row[3] || "GERAL").toUpperCase();
+            const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
+
+            const codCli = String(row[2]).trim();
+            const cliente = listaClientes.find(c => String(c.codigo).trim() === codCli);
+            const nomeExibir = cliente ? cliente.nome : "CLIENTE " + codCli;
+
+            const solicitante = row[6] || "Sistema";
+            const isAtrasado = row[7] === true;
+            const dataRota = row[8]; 
+
+            const dataSolic = new Date(row[1]);
+            const diaMes = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+            const horaMin = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+            let botaoRotaHtml = "";
+            let cardStyle = "";
+            
+            if (dataRota) {
+                cardStyle = "border-left: 8px solid #FF9800; background: #FFF9F0;";
+                const dRota = new Date(dataRota);
+                botaoRotaHtml = `
+                    <div style="font-size: 0.7rem; color: #E65100; font-weight: bold; margin-top: 10px; padding: 5px; border: 1px dashed #FF9800; border-radius: 5px; text-align: center;">
+                        🚚 EM ROTA: ${dRota.toLocaleDateString('pt-BR')} ${dRota.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}
+                    </div>`;
+            } else if (usuarioLogadoNivel === "ADMIN") {
+                botaoRotaHtml = `
+                    <button class="btn" style="background:#FF9800; color:white; font-size:0.7rem; margin-top:10px; padding:8px; width: 100%; border-radius: 8px;" 
+                        onclick="colocarEmRota('${row[0]}')">
+                        🚚 Iniciar Rota
+                    </button>`;
+            }
+
+            const checkboxHtml = (usuarioLogadoNivel === "ADMIN" && !dataRota) ? 
+                `<input type="checkbox" class="sel-rota" value="${row[0]}" style="margin-right:10px; transform: scale(1.4); cursor: pointer;">` : "";
+
+            grid.innerHTML += `
+                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
+                    <div class="tag ${getCor(sLimpo)}" style="display: flex; align-items: center; padding: 5px 10px;">
+                        ${checkboxHtml} 
+                        <span style="flex-grow:1">${setorNome} ${isAtrasado ? '⚠️' : ''}</span>
+                    </div>
+                    <div style="padding:12px">
+                        <b style="font-size: 1.1rem; display: block; color: #000; margin-bottom: 4px;">${nomeExibir}</b>
+                        <small style="color: #666;">Cód: ${codCli}</small>
+                        <div style="margin-top: 10px; color: #007bff; font-weight: bold; font-size: 0.85rem;">👤 Solicitado por: ${solicitante}</div>
+                        <div style="font-size: 0.8rem; margin: 10px 0; padding: 8px; background: #f1f1f1; border-left: 3px solid #333; border-radius: 4px;">
+                            📦 IDs: ${row[5]}
+                        </div>
+                        ${botaoRotaHtml}
+                        <div style="text-align:right; font-size: 0.7rem; color: #888; margin-top: 8px;">Criado em: ${diaMes} às ${horaMin}</div>
+                    </div>
                 </div>`;
-        } else if (usuarioLogadoNivel === "ADMIN") {
-            // O botão só aparece se NÃO houver dataRota
-            botaoRotaHtml = `
-                <button class="btn" style="background:#FF9800; color:white; font-size:0.7rem; margin-top:10px; padding:8px; width: 100%; border-radius: 8px;" 
-                    onclick="colocarEmRota('${row[0]}')">
-                    🚚 Iniciar Rota
-                </button>`;
-        }
-
-        // --- LOGICA DO CHECKBOX PARA SELEÇÃO EM MASSA ---
-        const checkboxHtml = (usuarioLogadoNivel === "ADMIN" && !dataRota) ? 
-            `<input type="checkbox" class="sel-rota" value="${row[0]}" style="margin-right:10px; transform: scale(1.4); cursor: pointer;">` : "";
-
-        grid.innerHTML += `
-            <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
-                <div class="tag ${getCor(sLimpo)}" style="display: flex; align-items: center; padding: 5px 10px;">
-                    ${checkboxHtml} 
-                    <span style="flex-grow:1">${setorNome} ${isAtrasado ? '⚠️' : ''}</span>
-                </div>
-                <div style="padding:12px">
-                    <b style="font-size: 1.1rem; display: block; color: #000; margin-bottom: 4px;">${nomeExibir}</b>
-                    <small style="color: #666;">Cód: ${codCli}</small>
-                    
-                    <div style="margin-top: 10px; color: #007bff; font-weight: bold; font-size: 0.85rem;">
-                        👤 Solicitado por: ${solicitante}
-                    </div>
-                    
-                    <div style="font-size: 0.8rem; margin: 10px 0; padding: 8px; background: #f1f1f1; border-left: 3px solid #333; border-radius: 4px;">
-                        📦 IDs: ${row[5]}
-                    </div>
-
-                    ${botaoRotaHtml}
-
-                    <div style="text-align:right; font-size: 0.7rem; color: #888; margin-top: 8px;">
-                        Criado em: ${diaMes} às ${horaMin}
-                    </div>
-                </div>
-            </div>`;
-    });
-}
+        });
+    }
 
     async function colocarEmRota(idSolicitacao) {
-        if(!confirm("Confirmar que este malote saiu para entrega/coleta? O prazo de 48h será reiniciado.")) return;
-        mostrarLoader("Atualizando rota...");
+        if(!confirm("Confirmar rota?")) return;
+        mostrarLoader("Atualizando...");
         try {
-            await fetch(URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'set_rota', idSolicitacao: idSolicitacao })
-            });
+            await fetch(URL, { method: 'POST', body: JSON.stringify({ action: 'set_rota', idSolicitacao: idSolicitacao }) });
             await carregar();
         } catch (e) { alert("Erro ao marcar rota."); }
         esconderLoader();
@@ -410,34 +300,12 @@ function render() {
         document.getElementById(id).classList.add('active');
         const btn = document.getElementById('btn-'+id);
         if(btn) btn.classList.add('active');
-        
-        if(id === 'v-exp') {
-            limparLote();
-            startVid();
-        } else {
-            stopVid();
-        }
-    }
-
-    async function startVid() {
-        stopVid();
-        try {
-            const s = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-            streamGlobal = s;
-            document.getElementById('vid').srcObject = s;
-        } catch (e) { alert("Erro câmera"); }
-    }
-
-    function stopVid() {
-        if (streamGlobal) streamGlobal.getTracks().forEach(t => t.stop());
-        document.getElementById('vid').srcObject = null;
     }
 
     function buscarNomeCliente(codigo) {
-    const c = listaClientes.find(i => String(i.codigo).trim() === String(codigo).trim());
-    const display = document.getElementById('at-nome');
-    if (display) display.value = c ? c.nome : "Não encontrado";
-}
+        const c = listaClientes.find(i => String(i.codigo).trim() === String(codigo).trim());
+        document.getElementById('at-nome').value = c ? c.nome : "Não encontrado";
+    }
 
     async function enviarAtend() {
         const cod = document.getElementById('at-cod').value;
@@ -449,7 +317,7 @@ function render() {
                 action:'solicitar', codCliente:cod, idPedido: document.getElementById('at-id-opcional').value, solicitante: usuarioLogado
             })});
             alert("Sucesso!");
-            carregar();
+            await carregar();
             changeView('v-dash');
         } catch(e) { alert("Erro"); }
         esconderLoader();
@@ -458,26 +326,17 @@ function render() {
     function adicionarIdLista() {
         const input = document.getElementById('exp-id');
         const id = input.value.trim();
-        if (!id) return;
-        if (!loteIds.includes(id)) {
+        if (id && !loteIds.includes(id)) {
             loteIds.push(id);
             renderizarListaIds();
         }
         input.value = "";
-        input.focus();
     }
 
     function renderizarListaIds() {
         const div = document.getElementById('lista-ids-exp');
-        if (loteIds.length === 0) {
-            div.innerHTML = '<span style="color:#999; font-size:0.8rem;">Nenhum ID adicionado...</span>';
-            return;
-        }
-        div.innerHTML = loteIds.map(id => 
-            `<span style="background: #000; color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; display: inline-flex; align-items: center;">
-                ${id} <b style="cursor:pointer; margin-left:8px; color: #ffeb3b;" onclick="removerId('${id}')">×</b>
-            </span>`
-        ).join('');
+        div.innerHTML = loteIds.length === 0 ? '<span style="color:#999; font-size:0.8rem;">Nenhum ID...</span>' : 
+            loteIds.map(id => `<span style="background:#000;color:#fff;padding:5px 12px;border-radius:20px;margin:2px;display:inline-block">${id} <b style="cursor:pointer;color:#ffeb3b" onclick="removerId('${id}')">×</b></span>`).join('');
     }
 
     function removerId(id) {
@@ -485,115 +344,54 @@ function render() {
         renderizarListaIds();
     }
 
-    function capturarFotoLote() {
-        const vid = document.getElementById('vid');
-        const canv = document.getElementById('canv');
-        if (!vid.videoWidth) return alert("Câmera não iniciada.");
-        canv.width = vid.videoWidth; 
-        canv.height = vid.videoHeight;
-        canv.getContext('2d').drawImage(vid, 0, 0);
-        const fotoData = canv.toDataURL('image/jpeg', 0.5);
-        loteFotos.push(fotoData);
-        document.getElementById('count-fotos').innerText = loteFotos.length;
-        vid.style.filter = "brightness(2)";
-        setTimeout(() => vid.style.filter = "brightness(1)", 100);
-    }
-
     function uploadGaleriaLote(input) {
         if (!input.files[0]) return;
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = (e) => {
             loteFotos.push(e.target.result);
             document.getElementById('count-fotos').innerText = loteFotos.length;
         };
         reader.readAsDataURL(input.files[0]);
-        input.value = "";
     }
 
     async function enviarLoteExpedicao() {
-        if (loteIds.length === 0) return alert("Adicione pelo menos um ID!");
-        mostrarLoader("Iniciando envio de " + loteIds.length + " itens...");
+        if (loteIds.length === 0) return alert("Adicione IDs!");
+        mostrarLoader("Enviando...");
         try {
             for (let i = 0; i < loteIds.length; i++) {
-                const idAtual = loteIds[i];
-                let fotoParaEsteId = "SEM_FOTO";
-                if (loteFotos.length > 0) {
-                    fotoParaEsteId = loteFotos[i] || loteFotos[0]; 
-                }
-                mostrarLoader(`Enviando item ${i+1} de ${loteIds.length}...`);
-                await fetch(URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({
-                        action: 'vincular_pedido',
-                        idPedido: idAtual,
-                        foto: fotoParaEsteId
-                    })
-                });
-                await sleep(1000); 
+                await fetch(URL, { method:'POST', mode:'no-cors', body: JSON.stringify({ action:'vincular_pedido', idPedido: loteIds[i], foto: loteFotos[i] || loteFotos[0] || "SEM_FOTO" }) });
+                await sleep(800);
             }
-            alert("Lote finalizado com sucesso!");
+            alert("Sucesso!");
             limparLote();
-            carregar();
+            await carregar();
             changeView('v-dash');
-        } catch (e) {
-            console.error(e);
-            alert("Erro no envio.");
-        }
+        } catch (e) { alert("Erro no envio"); }
         esconderLoader();
     }
 
     function limparLote() {
-        loteIds = [];
-        loteFotos = [];
-        const count = document.getElementById('count-fotos');
-        if(count) count.innerText = "0";
-        const inExp = document.getElementById('exp-id');
-        if(inExp) inExp.value = "";
+        loteIds = []; loteFotos = [];
+        document.getElementById('count-fotos').innerText = "0";
         renderizarListaIds();
     }
 
-    // Função para o checkbox "Selecionar Todos"
-function selecionarTodos(origem) {
-    const checkboxes = document.querySelectorAll('.sel-rota');
-    checkboxes.forEach(cb => cb.checked = origem.checked);
-}
-
-// Função que envia a lista de uma vez para o Google
-async function enviarRotaEmLote() {
-    const selecionados = Array.from(document.querySelectorAll('.sel-rota:checked')).map(cb => cb.value);
-    
-    if (selecionados.length === 0) return alert("❌ Selecione ao menos um malote!");
-    if (!confirm(`🚚 Confirmar saída de ${selecionados.length} malotes?`)) return;
-
-    if (typeof mostrarLoader === "function") mostrarLoader("Processando lote...");
-
-    try {
-        await fetch(URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'set_rota_multi', ids: selecionados })
-        });
-        
-        document.getElementById('select-all').checked = false;
-        alert("✅ Rota iniciada para todos os selecionados!");
-        await carregar(); // Recarrega a tela
-    } catch (e) {
-        alert("⚠️ Erro ao enviar. Verifique a internet.");
+    function selecionarTodos(origem) {
+        document.querySelectorAll('.sel-rota').forEach(cb => cb.checked = origem.checked);
     }
-    
-    if (typeof esconderLoader === "function") esconderLoader();
-}
-    
+
+    async function enviarRotaEmLote() {
+        const selecionados = Array.from(document.querySelectorAll('.sel-rota:checked')).map(cb => cb.value);
+        if (selecionados.length === 0) return alert("Selecione algo!");
+        if (!confirm(`Confirmar ${selecionados.length} malotes?`)) return;
+        mostrarLoader("Processando...");
+        try {
+            await fetch(URL, { method: 'POST', body: JSON.stringify({ action: 'set_rota_multi', ids: selecionados }) });
+            document.getElementById('select-all').checked = false;
+            await carregar();
+        } catch (e) { alert("Erro de conexão."); }
+        esconderLoader();
+    }
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
