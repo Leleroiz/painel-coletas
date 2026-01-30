@@ -131,8 +131,13 @@
     let dados = [];
     let listaClientes = [];
     let usuarioLogado = "";
+    let usuarioLogadoNivel = ""; // Variável para controle de acesso
     let fAtual = "TODOS";
     let streamGlobal = null;
+    let loteIds = [];
+    let loteFotos = [];
+
+    const sleep = ms => new Promise(res => setTimeout(res, ms));
 
     function mostrarLoader(texto) {
         document.getElementById('loader-text').innerText = texto || "Carregando...";
@@ -158,9 +163,15 @@
             
             if (res.sucesso) {
                 usuarioLogado = u;
+                usuarioLogadoNivel = res.nivel; // Salva o nível (ADMIN ou USER)
+                
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-nav').style.display = 'flex';
-                if (res.nivel === "ADMIN") document.getElementById('btn-planilha').style.display = 'inline-block';
+                
+                // Exibe botão de planilha apenas para ADMIN
+                if (res.nivel === "ADMIN") {
+                    document.getElementById('btn-planilha').style.display = 'inline-block';
+                }
                 
                 await carregarClientes(); 
                 await carregar();
@@ -209,29 +220,56 @@
             const nomeExibir = cliente ? cliente.nome : "CLIENTE " + codCli;
             const solicitante = row[6] || "Sistema";
             const isAtrasado = row[7] === true;
+            const dataRota = row[8]; // Data da Coluna H
 
             const dataSolic = new Date(row[1]);
             const diaMes = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
             const horaMin = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
 
+            // Lógica do Botão de Rota e Estilo
+            let botaoRotaHtml = "";
+            let cardStyle = "";
+            
+            if (dataRota) {
+                cardStyle = "border-left: 8px solid #FF9800; background: #FFF9F0;";
+                const dRota = new Date(dataRota);
+                botaoRotaHtml = `<div style="font-size: 0.7rem; color: #E65100; font-weight: bold; margin-top: 5px;">🚚 EM ROTA: ${dRota.toLocaleDateString()} ${dRota.getHours()}:${dRota.getMinutes()}</div>`;
+            } else if (usuarioLogadoNivel === "ADMIN") {
+                botaoRotaHtml = `<button class="btn" style="background:#FF9800; color:white; font-size:0.7rem; margin-top:10px; padding:5px;" onclick="colocarEmRota('${row[0]}')">🚚 Iniciar Rota</button>`;
+            }
+
             grid.innerHTML += `
-                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}">
+                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
                     <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
                     <div style="padding:12px">
                         <b style="font-size: 1.1rem; display: block; color: #000;">${nomeExibir}</b>
                         <small>Cód: ${codCli}</small>
                         <div style="margin-top: 8px; color: #007bff; font-weight: bold; font-size: 0.85rem;">
-                           👤 Solicitado por: ${solicitante}
+                            👤 Solicitado por: ${solicitante}
                         </div>
                         <div style="font-size: 0.8rem; margin: 8px 0; padding: 5px; background: #f9f9f9; border-left: 3px solid #000;">
                             📦 IDs: ${row[5]}
                         </div>
-                        <div style="text-align:right; font-size: 0.75rem; color: #666;">
-                            ${diaMes} às ${horaMin}
+                        ${botaoRotaHtml}
+                        <div style="text-align:right; font-size: 0.75rem; color: #666; margin-top:5px;">
+                            Criado em: ${diaMes} às ${horaMin}
                         </div>
                     </div>
                 </div>`;
         });
+    }
+
+    async function colocarEmRota(idSolicitacao) {
+        if(!confirm("Confirmar que este malote saiu para entrega/coleta? O prazo de 48h será reiniciado.")) return;
+        mostrarLoader("Atualizando rota...");
+        try {
+            await fetch(URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'set_rota', idSolicitacao: idSolicitacao })
+            });
+            await carregar();
+        } catch (e) { alert("Erro ao marcar rota."); }
+        esconderLoader();
     }
 
     function getCor(s) {
@@ -251,19 +289,19 @@
     }
 
     function changeView(id) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    const btn = document.getElementById('btn-'+id);
-    if(btn) btn.classList.add('active');
-    
-    if(id === 'v-exp') {
-        limparLote(); // Limpa a lista ao entrar na tela
-        startVid();   // Liga a câmera
-    } else {
-        stopVid();    // Desliga a câmera ao sair
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        const btn = document.getElementById('btn-'+id);
+        if(btn) btn.classList.add('active');
+        
+        if(id === 'v-exp') {
+            limparLote();
+            startVid();
+        } else {
+            stopVid();
+        }
     }
-}
 
     async function startVid() {
         stopVid();
@@ -299,134 +337,108 @@
         } catch(e) { alert("Erro"); }
         esconderLoader();
     }
-let loteIds = [];
-let loteFotos = [];
 
-// 1. Adiciona ID na lista visual
-function adicionarIdLista() {
-    const input = document.getElementById('exp-id');
-    const id = input.value.trim();
-    if (!id) return;
-    
-    if (!loteIds.includes(id)) {
-        loteIds.push(id);
+    function adicionarIdLista() {
+        const input = document.getElementById('exp-id');
+        const id = input.value.trim();
+        if (!id) return;
+        if (!loteIds.includes(id)) {
+            loteIds.push(id);
+            renderizarListaIds();
+        }
+        input.value = "";
+        input.focus();
+    }
+
+    function renderizarListaIds() {
+        const div = document.getElementById('lista-ids-exp');
+        if (loteIds.length === 0) {
+            div.innerHTML = '<span style="color:#999; font-size:0.8rem;">Nenhum ID adicionado...</span>';
+            return;
+        }
+        div.innerHTML = loteIds.map(id => 
+            `<span style="background: #000; color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; display: inline-flex; align-items: center;">
+                ${id} <b style="cursor:pointer; margin-left:8px; color: #ffeb3b;" onclick="removerId('${id}')">×</b>
+            </span>`
+        ).join('');
+    }
+
+    function removerId(id) {
+        loteIds = loteIds.filter(item => item !== id);
         renderizarListaIds();
     }
-    input.value = "";
-    input.focus();
-}
 
-// 2. Renderiza as etiquetas de IDs
-function renderizarListaIds() {
-    const div = document.getElementById('lista-ids-exp');
-    if (loteIds.length === 0) {
-        div.innerHTML = '<span style="color:#999; font-size:0.8rem;">Nenhum ID adicionado...</span>';
-        return;
-    }
-    div.innerHTML = loteIds.map(id => 
-        `<span style="background: #000; color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; display: inline-flex; align-items: center;">
-            ${id} <b style="cursor:pointer; margin-left:8px; color: #ffeb3b;" onclick="removerId('${id}')">×</b>
-        </span>`
-    ).join('');
-}
-
-function removerId(id) {
-    loteIds = loteIds.filter(item => item !== id);
-    renderizarListaIds();
-}
-
-// 3. Captura foto da câmera
-function capturarFotoLote() {
-    const vid = document.getElementById('vid');
-    const canv = document.getElementById('canv');
-    
-    if (!vid.videoWidth) return alert("Câmera não iniciada.");
-
-    canv.width = vid.videoWidth; 
-    canv.height = vid.videoHeight;
-    canv.getContext('2d').drawImage(vid, 0, 0);
-    
-    // Pegamos a foto atual
-    const fotoData = canv.toDataURL('image/jpeg', 0.5);
-    loteFotos.push(fotoData);
-    
-    document.getElementById('count-fotos').innerText = loteFotos.length;
-    
-    // Feedback visual
-    vid.style.filter = "brightness(2)";
-    setTimeout(() => vid.style.filter = "brightness(1)", 100);
-}
-
-// 4. Pega foto da Galeria
-function uploadGaleriaLote(input) {
-    if (!input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        loteFotos.push(e.target.result);
+    function capturarFotoLote() {
+        const vid = document.getElementById('vid');
+        const canv = document.getElementById('canv');
+        if (!vid.videoWidth) return alert("Câmera não iniciada.");
+        canv.width = vid.videoWidth; 
+        canv.height = vid.videoHeight;
+        canv.getContext('2d').drawImage(vid, 0, 0);
+        const fotoData = canv.toDataURL('image/jpeg', 0.5);
+        loteFotos.push(fotoData);
         document.getElementById('count-fotos').innerText = loteFotos.length;
-    };
-    reader.readAsDataURL(input.files[0]);
-    input.value = ""; // limpa o input para permitir subir a mesma foto se quiser
-}
-
-    const sleep = ms => new Promise(res => setTimeout(res, ms));
-
-// 5. Envia tudo para o Google Sheets
-async function enviarLoteExpedicao() {
-    if (loteIds.length === 0) return alert("Adicione pelo menos um ID!");
-    
-    mostrarLoader("Iniciando envio de " + loteIds.length + " itens...");
-    
-    try {
-        for (let i = 0; i < loteIds.length; i++) {
-            const idAtual = loteIds[i];
-            
-            // LÓGICA DE FOTO:
-            // Se você tirou 3 fotos para 3 IDs, cada um ganha a sua.
-            // Se tirou só 1 foto para 5 IDs, todos ganham a mesma.
-            let fotoParaEsteId = "SEM_FOTO";
-            if (loteFotos.length > 0) {
-                fotoParaEsteId = loteFotos[i] || loteFotos[0]; 
-            }
-
-            mostrarLoader(`Enviando item ${i+1} de ${loteIds.length}...`);
-
-            await fetch(URL, {
-                method: 'POST',
-                mode: 'no-cors', // Adicionado para evitar travas de rede em envios múltiplos
-                body: JSON.stringify({
-                    action: 'vincular_pedido',
-                    idPedido: idAtual,
-                    foto: fotoParaEsteId
-                })
-            });
-
-            // Pausa de 1 segundo entre envios para o Google não se perder
-            await sleep(1000); 
-        }
-        
-        alert("Lote finalizado com sucesso!");
-        limparLote();
-        carregar(); // Atualiza o monitor
-        changeView('v-dash');
-    } catch (e) {
-        console.error(e);
-        alert("Ocorreu um erro no envio. Verifique o monitor.");
+        vid.style.filter = "brightness(2)";
+        setTimeout(() => vid.style.filter = "brightness(1)", 100);
     }
-    esconderLoader();
-}
 
-function limparLote() {
-    loteIds = [];
-    loteFotos = [];
-    document.getElementById('count-fotos').innerText = "0";
-    document.getElementById('exp-id').value = "";
-    renderizarListaIds();
-}
+    function uploadGaleriaLote(input) {
+        if (!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            loteFotos.push(e.target.result);
+            document.getElementById('count-fotos').innerText = loteFotos.length;
+        };
+        reader.readAsDataURL(input.files[0]);
+        input.value = "";
+    }
 
+    async function enviarLoteExpedicao() {
+        if (loteIds.length === 0) return alert("Adicione pelo menos um ID!");
+        mostrarLoader("Iniciando envio de " + loteIds.length + " itens...");
+        try {
+            for (let i = 0; i < loteIds.length; i++) {
+                const idAtual = loteIds[i];
+                let fotoParaEsteId = "SEM_FOTO";
+                if (loteFotos.length > 0) {
+                    fotoParaEsteId = loteFotos[i] || loteFotos[0]; 
+                }
+                mostrarLoader(`Enviando item ${i+1} de ${loteIds.length}...`);
+                await fetch(URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({
+                        action: 'vincular_pedido',
+                        idPedido: idAtual,
+                        foto: fotoParaEsteId
+                    })
+                });
+                await sleep(1000); 
+            }
+            alert("Lote finalizado com sucesso!");
+            limparLote();
+            carregar();
+            changeView('v-dash');
+        } catch (e) {
+            console.error(e);
+            alert("Erro no envio.");
+        }
+        esconderLoader();
+    }
+
+    function limparLote() {
+        loteIds = [];
+        loteFotos = [];
+        const count = document.getElementById('count-fotos');
+        if(count) count.innerText = "0";
+        const inExp = document.getElementById('exp-id');
+        if(inExp) inExp.value = "";
+        renderizarListaIds();
+    }
 </script>
 </body>
 </html>
+
 
 
 
