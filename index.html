@@ -201,63 +201,80 @@
         esconderLoader();
     }
 
-    function render() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = "";
-        if (!dados || dados.length <= 1) return;
+function render() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = "";
+    if (!dados || dados.length <= 1) return;
 
-        const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    dados.slice(1).forEach(row => {
+        if (row[4] !== "Pendente") return;
         
-        dados.slice(1).forEach(row => {
-            if (row[4] !== "Pendente") return;
+        let setorNome = (row[3] || "GERAL").toUpperCase();
+        const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
+
+        // --- CORREÇÃO DO NOME DO CLIENTE ---
+        const codCli = String(row[2]).trim();
+        const cliente = listaClientes.find(c => String(c.codigo).trim() === codCli);
+        const nomeExibir = cliente ? cliente.nome : "CLIENTE " + codCli;
+        // -----------------------------------
+
+        const solicitante = row[6] || "Sistema";
+        const isAtrasado = row[7] === true;
+        const dataRota = row[8]; 
+
+        const dataSolic = new Date(row[1]);
+        const diaMes = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+        const horaMin = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+        let botaoRotaHtml = "";
+        let cardStyle = "";
+        
+        if (dataRota) {
+            // Estilo para quando já está em rota
+            cardStyle = "border-left: 8px solid #FF9800; background: #FFF9F0;";
+            const dRota = new Date(dataRota);
+            const horaRota = dRota.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
             
-            let setorNome = (row[3] || "GERAL").toUpperCase();
-            const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
-
-            const codCli = String(row[2]).trim();
-            const cliente = listaClientes.find(c => String(c.codigo).trim() === codCli);
-            const nomeExibir = cliente ? cliente.nome : "CLIENTE " + codCli;
-            const solicitante = row[6] || "Sistema";
-            const isAtrasado = row[7] === true;
-            const dataRota = row[8]; // Data da Coluna H
-
-            const dataSolic = new Date(row[1]);
-            const diaMes = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
-            const horaMin = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-
-            // Lógica do Botão de Rota e Estilo
-            let botaoRotaHtml = "";
-            let cardStyle = "";
-            
-            if (dataRota) {
-                cardStyle = "border-left: 8px solid #FF9800; background: #FFF9F0;";
-                const dRota = new Date(dataRota);
-                botaoRotaHtml = `<div style="font-size: 0.7rem; color: #E65100; font-weight: bold; margin-top: 5px;">🚚 EM ROTA: ${dRota.toLocaleDateString()} ${dRota.getHours()}:${dRota.getMinutes()}</div>`;
-            } else if (usuarioLogadoNivel === "ADMIN") {
-                botaoRotaHtml = `<button class="btn" style="background:#FF9800; color:white; font-size:0.7rem; margin-top:10px; padding:5px;" onclick="colocarEmRota('${row[0]}')">🚚 Iniciar Rota</button>`;
-            }
-
-            grid.innerHTML += `
-                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
-                    <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
-                    <div style="padding:12px">
-                        <b style="font-size: 1.1rem; display: block; color: #000;">${nomeExibir}</b>
-                        <small>Cód: ${codCli}</small>
-                        <div style="margin-top: 8px; color: #007bff; font-weight: bold; font-size: 0.85rem;">
-                            👤 Solicitado por: ${solicitante}
-                        </div>
-                        <div style="font-size: 0.8rem; margin: 8px 0; padding: 5px; background: #f9f9f9; border-left: 3px solid #000;">
-                            📦 IDs: ${row[5]}
-                        </div>
-                        ${botaoRotaHtml}
-                        <div style="text-align:right; font-size: 0.75rem; color: #666; margin-top:5px;">
-                            Criado em: ${diaMes} às ${horaMin}
-                        </div>
-                    </div>
+            botaoRotaHtml = `
+                <div style="font-size: 0.7rem; color: #E65100; font-weight: bold; margin-top: 10px; padding: 5px; border: 1px dashed #FF9800; border-radius: 5px; text-align: center;">
+                    🚚 EM ROTA: ${dRota.toLocaleDateString('pt-BR')} ${horaRota}
                 </div>`;
-        });
-    }
+        } else if (usuarioLogadoNivel === "ADMIN") {
+            // O botão só aparece se NÃO houver dataRota
+            botaoRotaHtml = `
+                <button class="btn" style="background:#FF9800; color:white; font-size:0.7rem; margin-top:10px; padding:8px; width: 100%; border-radius: 8px;" 
+                    onclick="colocarEmRota('${row[0]}')">
+                    🚚 Iniciar Rota
+                </button>`;
+        }
+
+        grid.innerHTML += `
+            <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
+                <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
+                <div style="padding:12px">
+                    <b style="font-size: 1.1rem; display: block; color: #000; margin-bottom: 4px;">${nomeExibir}</b>
+                    <small style="color: #666;">Cód: ${codCli}</small>
+                    
+                    <div style="margin-top: 10px; color: #007bff; font-weight: bold; font-size: 0.85rem;">
+                        👤 Solicitado por: ${solicitante}
+                    </div>
+                    
+                    <div style="font-size: 0.8rem; margin: 10px 0; padding: 8px; background: #f1f1f1; border-left: 3px solid #333; border-radius: 4px;">
+                        📦 IDs: ${row[5]}
+                    </div>
+
+                    ${botaoRotaHtml}
+
+                    <div style="text-align:right; font-size: 0.7rem; color: #888; margin-top: 8px;">
+                        Criado em: ${diaMes} às ${horaMin}
+                    </div>
+                </div>
+            </div>`;
+    });
+}
 
     async function colocarEmRota(idSolicitacao) {
         if(!confirm("Confirmar que este malote saiu para entrega/coleta? O prazo de 48h será reiniciado.")) return;
@@ -438,6 +455,7 @@
 </script>
 </body>
 </html>
+
 
 
 
