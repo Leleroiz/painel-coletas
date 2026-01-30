@@ -221,7 +221,8 @@
 
     function buscarNomeCliente(codigo) {
         if (!codigo) { document.getElementById('at-nome').value = ""; return; }
-        const cliente = listaClientes.find(c => c.codigo.toString() === codigo.toString());
+        // Força a comparação entre Strings para evitar erro de Tipo (Number vs String)
+        const cliente = listaClientes.find(c => String(c.codigo).trim() === String(codigo).trim());
         document.getElementById('at-nome').value = cliente ? cliente.nome : "Cliente não encontrado";
     }
 
@@ -239,9 +240,11 @@
             const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             if (fAtual !== "TODOS" && !sLimpo.includes(fLimpo)) return;
 
-            // BUSCA DE NOME MELHORADA
-            const codProcurado = row[2].toString().trim();
-            const infoCli = listaClientes.find(c => c.codigo.toString().trim() === codProcurado);
+            // BUSCA DE NOME AJUSTADA (Forçando ambos a String para garantir)
+            const codProcurado = String(row[2]).trim();
+            const infoCli = listaClientes.find(c => String(c.codigo).trim() === codProcurado);
+            
+            // Se achar o cliente usa o nome, se não achar, usa o que está na planilha ou "CLIENTE X"
             const nomeExibir = infoCli ? infoCli.nome : "CLIENTE " + codProcurado;
             
             const isAtrasado = row[7] === true;
@@ -265,7 +268,6 @@
                 </div>`;
         });
     }
-
     function getCor(s) {
         if (s.includes("CORAL")) return "c-coral";
         if (s.includes("LILAS")) return "c-lilas";
@@ -377,6 +379,7 @@
 </script>
 </body>
 </html>
+
 
 
 
