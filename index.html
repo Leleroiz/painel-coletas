@@ -340,24 +340,19 @@ function capturarFotoLote() {
     const vid = document.getElementById('vid');
     const canv = document.getElementById('canv');
     
-    if (!vid.videoWidth) {
-        alert("Câmera não está pronta. Tente novamente.");
-        return;
-    }
+    if (!vid.videoWidth) return alert("Câmera não iniciada.");
 
-    // Configura o canvas com o tamanho real do vídeo no momento
     canv.width = vid.videoWidth; 
     canv.height = vid.videoHeight;
     canv.getContext('2d').drawImage(vid, 0, 0);
     
-    // Converte para Base64 e salva no array
-    const fotoCapturada = canv.toDataURL('image/jpeg', 0.5);
-    loteFotos.push(fotoCapturada);
+    // Pegamos a foto atual
+    const fotoData = canv.toDataURL('image/jpeg', 0.5);
+    loteFotos.push(fotoData);
     
-    // Atualiza o contador na tela
     document.getElementById('count-fotos').innerText = loteFotos.length;
     
-    // Efeito visual de "Flash"
+    // Feedback visual
     vid.style.filter = "brightness(2)";
     setTimeout(() => vid.style.filter = "brightness(1)", 100);
 }
@@ -374,39 +369,49 @@ function uploadGaleriaLote(input) {
     input.value = ""; // limpa o input para permitir subir a mesma foto se quiser
 }
 
+    const sleep = ms => new Promise(res => setTimeout(res, ms));
+
 // 5. Envia tudo para o Google Sheets
 async function enviarLoteExpedicao() {
     if (loteIds.length === 0) return alert("Adicione pelo menos um ID!");
     
-    // Se tiver fotos, vamos usar; se não, vai como SEM_FOTO
-    mostrarLoader("Enviando lote de " + loteIds.length + " itens...");
+    mostrarLoader("Iniciando envio de " + loteIds.length + " itens...");
     
     try {
         for (let i = 0; i < loteIds.length; i++) {
             const idAtual = loteIds[i];
-            // Se houver fotos suficientes, envia a foto correspondente à posição do ID
-            // Se houver apenas uma foto, usa ela para todos. Se não houver nenhuma, SEM_FOTO.
+            
+            // LÓGICA DE FOTO:
+            // Se você tirou 3 fotos para 3 IDs, cada um ganha a sua.
+            // Se tirou só 1 foto para 5 IDs, todos ganham a mesma.
             let fotoParaEsteId = "SEM_FOTO";
             if (loteFotos.length > 0) {
                 fotoParaEsteId = loteFotos[i] || loteFotos[0]; 
             }
 
+            mostrarLoader(`Enviando item ${i+1} de ${loteIds.length}...`);
+
             await fetch(URL, {
                 method: 'POST',
+                mode: 'no-cors', // Adicionado para evitar travas de rede em envios múltiplos
                 body: JSON.stringify({
                     action: 'vincular_pedido',
                     idPedido: idAtual,
                     foto: fotoParaEsteId
                 })
             });
+
+            // Pausa de 1 segundo entre envios para o Google não se perder
+            await sleep(1000); 
         }
         
-        alert("Sucesso! Todos os pedidos do lote foram processados.");
+        alert("Lote finalizado com sucesso!");
         limparLote();
+        carregar(); // Atualiza o monitor
         changeView('v-dash');
     } catch (e) {
         console.error(e);
-        alert("Erro ao enviar. Verifique sua conexão.");
+        alert("Ocorreu um erro no envio. Verifique o monitor.");
     }
     esconderLoader();
 }
@@ -422,6 +427,7 @@ function limparLote() {
 </script>
 </body>
 </html>
+
 
 
 
