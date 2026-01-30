@@ -408,6 +408,30 @@
         const count = document.getElementById('count-fotos'); if(count) count.innerText = "0";
         renderizarListaIds();
     }
+
+// 1. Focar no campo usuário assim que a página abrir
+window.addEventListener('load', () => {
+    const userField = document.getElementById('user');
+    if (userField) userField.focus();
+});
+
+// 2. No campo Usuário: Ao dar Enter, pula para a Senha
+document.getElementById('user').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('pass').focus();
+    }
+});
+
+// 3. No campo Senha: Ao dar Enter, faz o Login
+document.getElementById('pass').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        fazerLogin();
+    }
+});
+    
 </script>
 </body>
 </html>
+
