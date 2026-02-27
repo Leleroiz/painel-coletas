@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabLog</title>
+    <title>LabLog - Painel de Controle</title>
     <style>
         :root { 
             --primary: #000; --accent: #ffeb3b; --bg: #f0f2f5; 
@@ -122,11 +122,13 @@
                 <button class="btn" style="width: 60px; padding: 0;" onclick="adicionarIdLista()">➕</button>
             </div>
             <div id="lista-ids-exp" style="display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; min-height: 30px; padding: 5px; border: 1px dashed #ccc; border-radius: 8px;"></div>
+            
             <video id="vid" autoplay playsinline style="width:100%; border-radius:10px; background: #000;"></video>
             <canvas id="canv" style="display:none"></canvas>
+            
             <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <button class="btn" style="background:#2196F3;" onclick="capturarFotoLote()">📸 Foto (<span id="count-fotos">0</span>)</button>
-                <button class="btn" style="background:#4CAF50" onclick="enviarBaixaRetornoMake()">🚀 Enviar Baixa</button>
+                <button class="btn" style="background:#4CAF50" onclick="enviarBaixaRetorno()">🚀 Dar Baixa</button>
             </div>
             <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <button class="btn" style="background:#607D8B" onclick="document.getElementById('file-input-lote').click()">📁 Galeria</button>
@@ -138,9 +140,10 @@
 </div>
 
 <script>
-    // URL Leitura (Google Apps Script - Mantida para puxar dados rápido)
-    const URL_GAS = "https://script.google.com/macros/s/AKfycbzzhxFNXACMsNhBYRx2RF0iQiCLVrJdyfszDK6OrtLmRSRVuUjk72yZt8v6xcineYlrJA/exec"; 
-    
+    // =========================================================
+    // COLE O SEU NOVO LINK DO GOOGLE APPS SCRIPT AQUI ABAIXO:
+    // =========================================================
+    const URL_GAS = "https://script.google.com/macros/s/AKfycbxxxxxxx/exec"; 
     
     let dados = [];
     let listaClientes = [];
@@ -151,8 +154,6 @@
     let loteIds = [];
     let loteFotos = [];
 
-    const sleep = ms => new Promise(res => setTimeout(res, ms));
-
     function mostrarLoader(texto) {
         document.getElementById('loader-text').innerText = texto || "Carregando...";
         document.getElementById('loader-overlay').style.display = 'flex';
@@ -160,7 +161,8 @@
 
     function esconderLoader() { document.getElementById('loader-overlay').style.display = 'none'; }
 
-    // LOGIN MANTIDO NO GAS (Rápido para ler)
+    // --- FUNÇÕES DE COMUNICAÇÃO COM O GOOGLE (SEM CORS) ---
+
     async function fazerLogin() {
         const u = document.getElementById('user').value.trim();
         const p = document.getElementById('pass').value.trim();
@@ -168,7 +170,10 @@
         
         mostrarLoader("Autenticando...");
         try {
-            const response = await fetch(URL_GAS, { method: 'POST', body: JSON.stringify({ action: 'login', user: u, pass: p }) });
+            const response = await fetch(URL_GAS, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'login', user: u, pass: p }) 
+            });
             const res = await response.json();
             
             if (res.sucesso) {
@@ -186,16 +191,107 @@
                 await carregar();
                 changeView('v-dash');
             } else { alert("Usuário ou senha incorretos."); }
-        } catch (err) { alert("Erro de conexão."); }
+        } catch (err) { alert("Erro de conexão com o banco de dados."); }
         esconderLoader();
     }
+
+    async function enviarAtend() {
+        const cod = document.getElementById('at-cod').value;
+        const nome = document.getElementById('at-nome').value;
+        const setor = document.getElementById('at-setor').value;
+        if (!cod || nome === "Não encontrado") return alert("Código inválido");
+        
+        mostrarLoader("Enviando solicitação...");
+        try {
+            // Sem header de JSON para evitar o bloqueio de CORS do Google
+            await fetch(URL_GAS, {
+                method: 'POST', 
+                body: JSON.stringify({
+                    acao: 'solicitar_coleta', 
+                    codCliente: cod, 
+                    setor: setor,
+                    idPedido: document.getElementById('at-id-opcional').value, 
+                    solicitante: usuarioLogado
+                })
+            });
+            alert("✅ Solicitação enviada com sucesso!");
+            
+            document.getElementById('at-cod').value = "";
+            document.getElementById('at-nome').value = "";
+            document.getElementById('at-id-opcional').value = "";
+            
+            await carregar();
+            changeView('v-dash');
+        } catch(e) { alert("Erro de conexão ao solicitar."); }
+        esconderLoader();
+    }
+
+    async function enviarRotaEImprimir() {
+        const selecionados = Array.from(document.querySelectorAll('.select-item:checked')).map(cb => cb.value);
+        if (selecionados.length === 0) return alert("Selecione os malotes primeiro!");
+        if (!confirm(`Iniciar rota e IMPRIMIR etiquetas para ${selecionados.length} itens?`)) return;
+        
+        mostrarLoader(`Acionando Servidor e Gerando Impressão...`);
+        
+        // Dispara a impressão imediatamente na tela
+        imprimirEtiquetas(selecionados);
+
+        try {
+            // Envia ordem de saída para o Google (Sem headers CORS)
+            await fetch(URL_GAS, { 
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    acao: 'iniciar_rotas_lote', 
+                    ids: selecionados, 
+                    usuario: usuarioLogado 
+                }) 
+            });
+            
+            document.getElementById('select-all').checked = false;
+            await carregar(); 
+            
+        } catch (e) { 
+            alert("Etiquetas impressas, mas houve lentidão ao avisar o servidor. Atualize a página."); 
+        }
+        esconderLoader();
+    }
+
+    async function enviarBaixaRetorno() {
+        if (loteIds.length === 0) return alert("Adicione o ID do pedido primeiro!");
+        mostrarLoader("Enviando foto para o Drive e dando baixa...");
+        
+        try {
+            // Envia IDs e Fotos base64 para o Google processar (Sem headers CORS)
+            await fetch(URL_GAS, { 
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    acao: 'baixa_retorno', 
+                    ids: loteIds, 
+                    fotos: loteFotos, 
+                    usuario: usuarioLogado 
+                }) 
+            });
+            
+            alert("✅ Baixa processada com sucesso no sistema!");
+            limparLote(); 
+            await carregar();
+            changeView('v-dash');
+            
+        } catch (e) {
+            console.error(e);
+            alert("Erro de comunicação ao enviar a baixa.");
+        }
+        esconderLoader();
+    }
+
+    // --- FUNÇÕES DE LEITURA E RENDERIZAÇÃO ---
 
     async function carregarClientes() {
         try {
             const r = await fetch(URL_GAS + "?action=getClientes");
             const data = await r.json();
             if (data) listaClientes = data;
-        } catch (e) { console.error("Erro clientes:", e); }
+        } catch (e) { console.error("Erro ao puxar lista de clientes:", e); }
     }
 
     async function carregar() {
@@ -205,7 +301,7 @@
             const r = await fetch(URL_GAS);
             dados = await r.json();
             render();
-        } catch (e) { console.error("Erro ao carregar"); }
+        } catch (e) { console.error("Erro ao carregar os cartões do monitor"); }
         esconderLoader();
     }
 
@@ -229,14 +325,12 @@
 
             const solicitante = row[6] || "Sistema";
             const isAtrasado = row[7] === true;
-            const dataRota = row[8]; 
 
             const dataSolic = new Date(row[1]);
             const diaMes = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
             const horaMin = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
 
             let checkboxHtml = "";
-            let cardStyle = "";
 
             if (usuarioLogadoNivel === "ADMIN") {
                 checkboxHtml = `
@@ -246,7 +340,7 @@
             }
 
             grid.innerHTML += `
-                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${cardStyle}">
+                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}">
                     ${checkboxHtml}
                     <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
                     <div style="padding:12px; position:relative;">
@@ -260,11 +354,8 @@
         });
     }
 
-    function toggleSelectAll(master) {
-        document.querySelectorAll('.select-item').forEach(c => c.checked = master.checked);
-    }
+    // --- IMPRESSÃO TÉRMICA (O GERADOR DE ETIQUETAS) ---
 
-    // --- A NOVA LÓGICA DE IMPRESSÃO ---
     function imprimirEtiquetas(idsSelecionados) {
         let conteudoHTML = '';
         
@@ -274,16 +365,22 @@
                 let setorNome = (row[3] || "GERAL").toUpperCase();
                 const codCli = String(row[2]).trim();
                 const cliente = listaClientes.find(c => String(c.codigo).trim() === codCli);
+                
                 const nomeExibir = cliente ? cliente.nome : "CLIENTE " + codCli;
+                const enderecoExibir = (cliente && cliente.endereco) ? cliente.endereco : "Endereço não cadastrado";
 
                 conteudoHTML += `
                     <div class="etiqueta">
-                        <h2 style="font-size: 24px; text-transform: uppercase;">ROTA: ${setorNome}</h2>
-                        <h3 style="font-size: 20px;">${nomeExibir}</h3>
+                        <h2 style="font-size: 24px; text-transform: uppercase; margin-bottom: 5px;">ROTA: ${setorNome}</h2>
+                        <h3 style="font-size: 20px; margin-top: 0;">${nomeExibir}</h3>
                         <p><b>Cód Cliente:</b> ${codCli}</p>
                         <p><b>ID Sistema:</b> ${id}</p>
-                        <p><b>Data:</b> ${new Date().toLocaleString('pt-BR')}</p>
-                        <p style="margin-top: 10px; font-size: 12px; text-align: center;">_______________________<br>Visto Expedição</p>
+                        <div style="margin: 10px 0; padding: 5px; border: 1px solid #000;">
+                            <b>ENDEREÇO DE ENTREGA:</b><br>
+                            ${enderecoExibir}
+                        </div>
+                        <p><b>Data Saída:</b> ${new Date().toLocaleString('pt-BR')}</p>
+                        <p style="margin-top: 15px; font-size: 12px; text-align: center;">_______________________<br>Visto Expedição</p>
                     </div>
                 `;
             }
@@ -293,13 +390,13 @@
         janelaImpressao.document.write(`
             <html>
                 <head>
-                    <title>Imprimir Malotes</title>
+                    <title>Impressão Termica - LabLog</title>
                     <style>
                         body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; color: #000; width: 80mm; }
                         .etiqueta { border-bottom: 2px dashed #000; padding-bottom: 15px; margin-bottom: 15px; page-break-after: always; }
                         h2, h3 { margin: 5px 0; }
-                        p { margin: 5px 0; font-size: 16px; }
-                        @media print { body { width: 100%; } }
+                        p, div { margin: 5px 0; font-size: 16px; line-height: 1.2; }
+                        @media print { body { width: 100%; margin: 0; padding: 0; } }
                     </style>
                 </head>
                 <body>${conteudoHTML}</body>
@@ -308,109 +405,17 @@
         janelaImpressao.document.close();
         janelaImpressao.focus();
         
-        // Dá um pequeno tempo para o navegador renderizar e chama a impressão
+        // Dá um pequeno tempo para o navegador desenhar a etiqueta e chama a impressora
         setTimeout(() => { 
             janelaImpressao.print(); 
             janelaImpressao.close(); 
         }, 800);
     }
 
-    // --- COMUNICAÇÃO COM O MAKE.COM ---
+    // --- FUNÇÕES DE NAVEGAÇÃO E LÓGICA DE INTERFACE ---
 
-    // 1. Enviar em lote e imprimir
-    async function enviarRotaEImprimir() {
-        const selecionados = Array.from(document.querySelectorAll('.select-item:checked')).map(cb => cb.value);
-        if (selecionados.length === 0) return alert("Selecione itens primeiro!");
-        if (!confirm(`Iniciar rota e IMPRIMIR etiquetas para ${selecionados.length} itens?`)) return;
-        
-        mostrarLoader(`Acionando Servidor e Gerando Impressão...`);
-        
-        // 1. Gera e abre a impressão na tela imediatamente
-        imprimirEtiquetas(selecionados);
-
-        try {
-            // 2. Manda um payload único para o Make processar todos de uma vez
-            await fetch(URL_MAKE, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    acao: 'iniciar_rotas_lote', 
-                    ids: selecionados, 
-                    usuario: usuarioLogado 
-                }) 
-            });
-            
-            document.getElementById('select-all').checked = false;
-            await carregar(); // Atualiza o painel via App Script
-            
-        } catch (e) { 
-            alert("Etiquetas impressas, mas houve erro ao avisar o servidor. Atualize a página."); 
-        }
-        esconderLoader();
-    }
-
-    // 2. Dar Baixa no Retorno com Foto
-    async function enviarBaixaRetornoMake() {
-        if (loteIds.length === 0) return alert("Adicione o ID do pedido!");
-        mostrarLoader("Enviando foto e dando baixa...");
-        
-        try {
-            // Envia tudo empacotado para o Make
-            await fetch(URL_MAKE, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    acao: 'baixa_retorno', 
-                    ids: loteIds, 
-                    fotos: loteFotos, 
-                    usuario: usuarioLogado 
-                }) 
-            });
-            
-            alert("Baixa processada com sucesso no Make!");
-            limparLote(); 
-            await carregar();
-            changeView('v-dash');
-            
-        } catch (e) {
-            console.error(e);
-            alert("Erro de comunicação com o servidor.");
-        }
-        esconderLoader();
-    }
-
-    // 3. Solicitar do Atendimento
-    async function enviarAtend() {
-        const cod = document.getElementById('at-cod').value;
-        const nome = document.getElementById('at-nome').value;
-        const setor = document.getElementById('at-setor').value;
-        if (!cod || nome === "Não encontrado") return alert("Código inválido");
-        
-        mostrarLoader();
-        try {
-            // Manda a solicitação para o Make criar a linha
-            await fetch(URL_MAKE, {
-                method:'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    acao:'solicitar_coleta', 
-                    codCliente: cod, 
-                    setor: setor,
-                    idPedido: document.getElementById('at-id-opcional').value, 
-                    solicitante: usuarioLogado
-                })
-            });
-            alert("Sucesso!");
-            
-            // Limpa formulário
-            document.getElementById('at-cod').value = "";
-            document.getElementById('at-nome').value = "";
-            document.getElementById('at-id-opcional').value = "";
-            
-            await carregar();
-            changeView('v-dash');
-        } catch(e) { alert("Erro ao enviar solicitação."); }
-        esconderLoader();
+    function toggleSelectAll(master) {
+        document.querySelectorAll('.select-item').forEach(c => c.checked = master.checked);
     }
 
     function getCor(s) {
@@ -438,24 +443,26 @@
         if(id === 'v-exp') { limparLote(); startVid(); } else { stopVid(); }
     }
 
+    function buscarNomeCliente(codigo) {
+        const c = listaClientes.find(i => String(i.codigo).trim() === String(codigo).trim());
+        const display = document.getElementById('at-nome');
+        if (display) display.value = c ? c.nome : "Não encontrado";
+    }
+
+    // --- FUNÇÕES DA CÂMERA E GALERIA ---
+
     async function startVid() {
         stopVid();
         try {
             const s = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
             streamGlobal = s;
             document.getElementById('vid').srcObject = s;
-        } catch (e) { alert("Erro câmera"); }
+        } catch (e) { console.log("Câmera não disponível no momento."); }
     }
 
     function stopVid() {
         if (streamGlobal) streamGlobal.getTracks().forEach(t => t.stop());
         document.getElementById('vid').srcObject = null;
-    }
-
-    function buscarNomeCliente(codigo) {
-        const c = listaClientes.find(i => String(i.codigo).trim() === String(codigo).trim());
-        const display = document.getElementById('at-nome');
-        if (display) display.value = c ? c.nome : "Não encontrado";
     }
 
     function adicionarIdLista() {
@@ -484,17 +491,23 @@
     function capturarFotoLote() {
         const vid = document.getElementById('vid');
         const canv = document.getElementById('canv');
-        if (!vid.videoWidth) return alert("Câmera desligada");
+        if (!vid.videoWidth) return alert("Câmera desligada ou sem permissão");
         canv.width = vid.videoWidth; canv.height = vid.videoHeight;
         canv.getContext('2d').drawImage(vid, 0, 0);
-        loteFotos.push(canv.toDataURL('image/jpeg', 0.5));
+        
+        // A compressão da foto que evita o timeout no Google:
+        loteFotos.push(canv.toDataURL('image/jpeg', 0.4)); 
+        
         document.getElementById('count-fotos').innerText = loteFotos.length;
     }
 
     function uploadGaleriaLote(input) {
         if (!input.files[0]) return;
         const reader = new FileReader();
-        reader.onload = e => { loteFotos.push(e.target.result); document.getElementById('count-fotos').innerText = loteFotos.length; };
+        reader.onload = e => { 
+            loteFotos.push(e.target.result); 
+            document.getElementById('count-fotos').innerText = loteFotos.length; 
+        };
         reader.readAsDataURL(input.files[0]);
     }
 
@@ -503,6 +516,8 @@
         const count = document.getElementById('count-fotos'); if(count) count.innerText = "0";
         renderizarListaIds();
     }
+
+    // --- ATALHOS DE TECLADO NO LOGIN ---
 
     window.addEventListener('load', () => {
         const userField = document.getElementById('user');
@@ -520,5 +535,3 @@
 </script>
 </body>
 </html>
-
-
