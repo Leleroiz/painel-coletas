@@ -36,7 +36,7 @@
         .c-coral { background: var(--coral); } .c-lilas { background: var(--lilas); }
         .c-bege { background: var(--bege); } .c-amarelo { background: var(--amarelo); } .c-rosa { background: var(--rosa); }
 
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #000; border-radius: 8px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #000; border-radius: 8px; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         #loader-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: white; }
@@ -84,8 +84,8 @@
                 <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)" style="width: 22px; height: 22px; margin: 0; cursor: pointer;">
                 <label for="select-all" style="cursor: pointer;">Todos</label>
             </div>
-            <button class="btn" style="background: #2e7d32; margin: 0; flex: 1; padding: 10px; font-size: 0.8rem;" onclick="enviarRotaEmLote()">
-                🚚 INICIAR ROTA DOS SELECIONADOS
+            <button class="btn" style="background: #2e7d32; margin: 0; flex: 1; padding: 10px; font-size: 0.8rem;" onclick="enviarRotaEImprimir()">
+                🚚 INICIAR ROTA & IMPRIMIR ETIQUETAS
             </button>
         </div>
         <div id="grid" class="grid-monitor"></div>
@@ -100,6 +100,15 @@
             <input type="text" id="at-nome" placeholder="Nome aparecerá aqui..." disabled style="background: #eee;">
             <label>ID do Pedido (Opcional):</label>
             <input type="text" id="at-id-opcional" placeholder="Ex: 999888">
+            <label>Setor/Rota (Para Impressão):</label>
+            <select id="at-setor">
+                <option value="GERAL">GERAL</option>
+                <option value="CORAL">CORAL</option>
+                <option value="LILAS">LILÁS</option>
+                <option value="BEGE">BEGE</option>
+                <option value="AMARELO">AMARELO</option>
+                <option value="ROSA">ROSA</option>
+            </select>
             <button class="btn" onclick="enviarAtend()">Solicitar Coleta</button>
         </div>
     </div>
@@ -117,7 +126,7 @@
             <canvas id="canv" style="display:none"></canvas>
             <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <button class="btn" style="background:#2196F3;" onclick="capturarFotoLote()">📸 Foto (<span id="count-fotos">0</span>)</button>
-                <button class="btn" style="background:#4CAF50" onclick="enviarLoteExpedicao()">🚀 Enviar Lote</button>
+                <button class="btn" style="background:#4CAF50" onclick="enviarBaixaRetornoMake()">🚀 Enviar Baixa</button>
             </div>
             <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <button class="btn" style="background:#607D8B" onclick="document.getElementById('file-input-lote').click()">📁 Galeria</button>
@@ -129,7 +138,11 @@
 </div>
 
 <script>
-    const URL = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
+    // URL Leitura (Google Apps Script - Mantida para puxar dados rápido)
+    const URL_GAS = "https://script.google.com/macros/s/AKfycbyyZPoG_vqdUVspT6-if9AxdUfUlM_kT_yebyi2UCUgk94VvXnSRSn89QbYH-5v3BQaUA/exec"; 
+    
+    // URL Escrita (Make.com - O novo motor pesado)
+    const URL_MAKE = "https://hook.us2.make.com/iimyud3p3oheq2lhx8ar8bu0ylup69rb";
     
     let dados = [];
     let listaClientes = [];
@@ -147,10 +160,9 @@
         document.getElementById('loader-overlay').style.display = 'flex';
     }
 
-    function esconderLoader() {
-        document.getElementById('loader-overlay').style.display = 'none';
-    }
+    function esconderLoader() { document.getElementById('loader-overlay').style.display = 'none'; }
 
+    // LOGIN MANTIDO NO GAS (Rápido para ler)
     async function fazerLogin() {
         const u = document.getElementById('user').value.trim();
         const p = document.getElementById('pass').value.trim();
@@ -158,10 +170,7 @@
         
         mostrarLoader("Autenticando...");
         try {
-            const response = await fetch(URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'login', user: u, pass: p })
-            });
+            const response = await fetch(URL_GAS, { method: 'POST', body: JSON.stringify({ action: 'login', user: u, pass: p }) });
             const res = await response.json();
             
             if (res.sucesso) {
@@ -178,16 +187,14 @@
                 await carregarClientes(); 
                 await carregar();
                 changeView('v-dash');
-            } else {
-                alert("Usuário ou senha incorretos.");
-            }
+            } else { alert("Usuário ou senha incorretos."); }
         } catch (err) { alert("Erro de conexão."); }
         esconderLoader();
     }
 
     async function carregarClientes() {
         try {
-            const r = await fetch(URL + "?action=getClientes");
+            const r = await fetch(URL_GAS + "?action=getClientes");
             const data = await r.json();
             if (data) listaClientes = data;
         } catch (e) { console.error("Erro clientes:", e); }
@@ -195,9 +202,9 @@
 
     async function carregar() {
         if(!usuarioLogado) return;
-        mostrarLoader("Atualizando...");
+        mostrarLoader("Atualizando Painel...");
         try {
-            const r = await fetch(URL);
+            const r = await fetch(URL_GAS);
             dados = await r.json();
             render();
         } catch (e) { console.error("Erro ao carregar"); }
@@ -230,23 +237,14 @@
             const diaMes = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
             const horaMin = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
 
-            let botaoRotaHtml = "";
-            let cardStyle = "";
             let checkboxHtml = "";
+            let cardStyle = "";
 
-            if (dataRota) {
-                cardStyle = "border-left: 8px solid #FF9800; background: #FFF9F0;";
-                const dRota = new Date(dataRota);
-                botaoRotaHtml = `<div style="font-size: 0.7rem; color: #E65100; font-weight: bold; margin-top: 10px; padding: 5px; border: 1px dashed #FF9800; border-radius: 5px; text-align: center;">🚚 EM ROTA</div>`;
-            } else if (usuarioLogadoNivel === "ADMIN") {
+            if (usuarioLogadoNivel === "ADMIN") {
                 checkboxHtml = `
                 <div style="position: absolute; top: 8px; right: 10px; z-index: 10;">
                     <input type="checkbox" class="select-item" value="${row[0]}" style="width: 22px; height: 22px; cursor: pointer; accent-color: #2e7d32;">
                 </div>`;
-                botaoRotaHtml = `
-                    <button class="btn" style="background:#FF9800; font-size:0.7rem; margin-top:10px; padding:8px;" onclick="colocarEmRota('${row[0]}')">
-                        🚚 Iniciar Rota
-                    </button>`;
             }
 
             grid.innerHTML += `
@@ -257,37 +255,163 @@
                         <b style="font-size: 1.1rem; display: block; color: #000; margin-bottom: 4px;">${nomeExibir}</b>
                         <small style="color: #666;">Cód: ${codCli}</small>
                         <div style="margin-top: 10px; color: #007bff; font-weight: bold; font-size: 0.85rem;">👤 ${solicitante}</div>
-                        <div style="font-size: 0.8rem; margin: 10px 0; padding: 8px; background: #f1f1f1; border-left: 3px solid #333; border-radius: 4px;">📦 IDs: ${row[5]}</div>
-                        ${botaoRotaHtml}
+                        <div style="font-size: 0.8rem; margin: 10px 0; padding: 8px; background: #f1f1f1; border-left: 3px solid #333; border-radius: 4px;">📦 ID Sist: ${row[0]}<br>Pedido: ${row[5]}</div>
                         <div style="text-align:right; font-size: 0.7rem; color: #888; margin-top: 8px;">${diaMes} às ${horaMin}</div>
                     </div>
                 </div>`;
         });
     }
 
-    async function colocarEmRota(id) {
-        if(!confirm("Iniciar rota?")) return;
-        mostrarLoader();
-        await fetch(URL, { method: 'POST', body: JSON.stringify({ action: 'set_rota', idSolicitacao: id }) });
-        await carregar();
-        esconderLoader();
-    }
-
     function toggleSelectAll(master) {
         document.querySelectorAll('.select-item').forEach(c => c.checked = master.checked);
     }
 
-    async function enviarRotaEmLote() {
+    // --- A NOVA LÓGICA DE IMPRESSÃO ---
+    function imprimirEtiquetas(idsSelecionados) {
+        let conteudoHTML = '';
+        
+        idsSelecionados.forEach(id => {
+            const row = dados.find(r => r[0] == id);
+            if(row) {
+                let setorNome = (row[3] || "GERAL").toUpperCase();
+                const codCli = String(row[2]).trim();
+                const cliente = listaClientes.find(c => String(c.codigo).trim() === codCli);
+                const nomeExibir = cliente ? cliente.nome : "CLIENTE " + codCli;
+
+                conteudoHTML += `
+                    <div class="etiqueta">
+                        <h2 style="font-size: 24px; text-transform: uppercase;">ROTA: ${setorNome}</h2>
+                        <h3 style="font-size: 20px;">${nomeExibir}</h3>
+                        <p><b>Cód Cliente:</b> ${codCli}</p>
+                        <p><b>ID Sistema:</b> ${id}</p>
+                        <p><b>Data:</b> ${new Date().toLocaleString('pt-BR')}</p>
+                        <p style="margin-top: 10px; font-size: 12px; text-align: center;">_______________________<br>Visto Expedição</p>
+                    </div>
+                `;
+            }
+        });
+
+        const janelaImpressao = window.open('', '', 'width=400,height=600');
+        janelaImpressao.document.write(`
+            <html>
+                <head>
+                    <title>Imprimir Malotes</title>
+                    <style>
+                        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; color: #000; width: 80mm; }
+                        .etiqueta { border-bottom: 2px dashed #000; padding-bottom: 15px; margin-bottom: 15px; page-break-after: always; }
+                        h2, h3 { margin: 5px 0; }
+                        p { margin: 5px 0; font-size: 16px; }
+                        @media print { body { width: 100%; } }
+                    </style>
+                </head>
+                <body>${conteudoHTML}</body>
+            </html>
+        `);
+        janelaImpressao.document.close();
+        janelaImpressao.focus();
+        
+        // Dá um pequeno tempo para o navegador renderizar e chama a impressão
+        setTimeout(() => { 
+            janelaImpressao.print(); 
+            janelaImpressao.close(); 
+        }, 800);
+    }
+
+    // --- COMUNICAÇÃO COM O MAKE.COM ---
+
+    // 1. Enviar em lote e imprimir
+    async function enviarRotaEImprimir() {
         const selecionados = Array.from(document.querySelectorAll('.select-item:checked')).map(cb => cb.value);
-        if (selecionados.length === 0) return alert("Selecione itens!");
-        if (!confirm(`Iniciar rota para ${selecionados.length} itens?`)) return;
-        mostrarLoader(`Enviando ${selecionados.length} itens...`);
-        for (let id of selecionados) {
-            await fetch(URL, { method: 'POST', body: JSON.stringify({ action: 'set_rota', idSolicitacao: id }) });
-            await sleep(500);
+        if (selecionados.length === 0) return alert("Selecione itens primeiro!");
+        if (!confirm(`Iniciar rota e IMPRIMIR etiquetas para ${selecionados.length} itens?`)) return;
+        
+        mostrarLoader(`Acionando Servidor e Gerando Impressão...`);
+        
+        // 1. Gera e abre a impressão na tela imediatamente
+        imprimirEtiquetas(selecionados);
+
+        try {
+            // 2. Manda um payload único para o Make processar todos de uma vez
+            await fetch(URL_MAKE, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    acao: 'iniciar_rotas_lote', 
+                    ids: selecionados, 
+                    usuario: usuarioLogado 
+                }) 
+            });
+            
+            document.getElementById('select-all').checked = false;
+            await carregar(); // Atualiza o painel via App Script
+            
+        } catch (e) { 
+            alert("Etiquetas impressas, mas houve erro ao avisar o servidor. Atualize a página."); 
         }
-        alert("Lote concluído!");
-        await carregar();
+        esconderLoader();
+    }
+
+    // 2. Dar Baixa no Retorno com Foto
+    async function enviarBaixaRetornoMake() {
+        if (loteIds.length === 0) return alert("Adicione o ID do pedido!");
+        mostrarLoader("Enviando foto e dando baixa...");
+        
+        try {
+            // Envia tudo empacotado para o Make
+            await fetch(URL_MAKE, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    acao: 'baixa_retorno', 
+                    ids: loteIds, 
+                    fotos: loteFotos, 
+                    usuario: usuarioLogado 
+                }) 
+            });
+            
+            alert("Baixa processada com sucesso no Make!");
+            limparLote(); 
+            await carregar();
+            changeView('v-dash');
+            
+        } catch (e) {
+            console.error(e);
+            alert("Erro de comunicação com o servidor.");
+        }
+        esconderLoader();
+    }
+
+    // 3. Solicitar do Atendimento
+    async function enviarAtend() {
+        const cod = document.getElementById('at-cod').value;
+        const nome = document.getElementById('at-nome').value;
+        const setor = document.getElementById('at-setor').value;
+        if (!cod || nome === "Não encontrado") return alert("Código inválido");
+        
+        mostrarLoader();
+        try {
+            // Manda a solicitação para o Make criar a linha
+            await fetch(URL_MAKE, {
+                method:'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    acao:'solicitar_coleta', 
+                    codCliente: cod, 
+                    setor: setor,
+                    idPedido: document.getElementById('at-id-opcional').value, 
+                    solicitante: usuarioLogado
+                })
+            });
+            alert("Sucesso!");
+            
+            // Limpa formulário
+            document.getElementById('at-cod').value = "";
+            document.getElementById('at-nome').value = "";
+            document.getElementById('at-id-opcional').value = "";
+            
+            await carregar();
+            changeView('v-dash');
+        } catch(e) { alert("Erro ao enviar solicitação."); }
         esconderLoader();
     }
 
@@ -336,20 +460,6 @@
         if (display) display.value = c ? c.nome : "Não encontrado";
     }
 
-    async function enviarAtend() {
-        const cod = document.getElementById('at-cod').value;
-        const nome = document.getElementById('at-nome').value;
-        if (!cod || nome === "Não encontrado") return alert("Código inválido");
-        mostrarLoader();
-        await fetch(URL, {method:'POST', body: JSON.stringify({
-            action:'solicitar', codCliente:cod, idPedido: document.getElementById('at-id-opcional').value, solicitante: usuarioLogado
-        })});
-        alert("Sucesso!");
-        await carregar();
-        changeView('v-dash');
-        esconderLoader();
-    }
-
     function adicionarIdLista() {
         const input = document.getElementById('exp-id');
         const id = input.value.trim();
@@ -389,30 +499,6 @@
         reader.onload = e => { loteFotos.push(e.target.result); document.getElementById('count-fotos').innerText = loteFotos.length; };
         reader.readAsDataURL(input.files[0]);
     }
-async function enviarLoteExpedicao() {
-    if (loteIds.length === 0) return alert("Adicione IDs!");
-    mostrarLoader("Enviando e dando baixa...");
-    
-    for (let i = 0; i < loteIds.length; i++) {
-        const foto = loteFotos[i] || (loteFotos.length > 0 ? loteFotos[0] : "SEM_FOTO");
-        try {
-            // REMOVIDO o 'no-cors' para garantir que a baixa seja processada antes de carregar o monitor
-            await fetch(URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'vincular_pedido', idPedido: loteIds[i], foto: foto }) 
-            });
-        } catch (e) {
-            console.error("Erro no ID: " + loteIds[i]);
-        }
-        await sleep(800); 
-    }
-    
-    alert("Processado com sucesso!");
-    limparLote(); 
-    await carregar(); // Agora o monitor vai atualizar e o card vai SUMIR
-    changeView('v-dash');
-    esconderLoader();
-}
 
     function limparLote() {
         loteIds = []; loteFotos = [];
@@ -420,30 +506,19 @@ async function enviarLoteExpedicao() {
         renderizarListaIds();
     }
 
-// 1. Focar no campo usuário assim que a página abrir
-window.addEventListener('load', () => {
-    const userField = document.getElementById('user');
-    if (userField) userField.focus();
-});
+    window.addEventListener('load', () => {
+        const userField = document.getElementById('user');
+        if (userField) userField.focus();
+    });
 
-// 2. No campo Usuário: Ao dar Enter, pula para a Senha
-document.getElementById('user').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        document.getElementById('pass').focus();
-    }
-});
+    document.getElementById('user').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pass').focus(); }
+    });
 
-// 3. No campo Senha: Ao dar Enter, faz o Login
-document.getElementById('pass').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        fazerLogin();
-    }
-});
+    document.getElementById('pass').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); fazerLogin(); }
+    });
     
 </script>
 </body>
 </html>
-
-
