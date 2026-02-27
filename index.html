@@ -11,7 +11,7 @@
         }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); }
         #login-screen { position: fixed; inset: 0; background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        nav { background: var(--primary); padding: 15px; display: none; justify-content: center; gap: 10px; position: sticky; top: 0; z-index: 1000; }
+        nav { background: var(--primary); padding: 15px; display: none; justify-content: center; gap: 10px; flex-wrap: wrap; position: sticky; top: 0; z-index: 1000; }
         nav button { background: none; border: 2px solid #444; color: white; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         nav button.active { background: var(--accent); color: #000; }
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
@@ -62,6 +62,7 @@
 
 <nav id="main-nav">
     <button onclick="changeView('v-dash')" id="btn-v-dash">Monitor 🖥</button>
+    <button onclick="changeView('v-rota')" id="btn-v-rota">Na Rua 🛣️</button>
     <button onclick="changeView('v-atend')" id="btn-v-atend">Atendimento 📞</button>
     <button onclick="changeView('v-exp')" id="btn-v-exp">Expedição 🛵</button>
     <button onclick="window.open('https://docs.google.com/spreadsheets/d/1Tm62VRvFTjAMZPrInt6Z-JKy99-he1JX_zc1sJHK4Tw/edit', '_blank')" id="btn-planilha" style="background-color: #2e7d32; display: none;">📊 Planilha</button>
@@ -89,6 +90,14 @@
             </button>
         </div>
         <div id="grid" class="grid-monitor"></div>
+    </div>
+
+    <div id="v-rota" class="view">
+        <div class="card" style="margin-bottom: 20px; text-align: center; border-color: #FF9800; background: #FFF9F0;">
+            <h2 style="margin: 0; color: #E65100;">Malotes na Rua 🛣️</h2>
+            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #555;">Estes pedidos já saíram. Aguardando a Expedição dar a baixa de retorno.</p>
+        </div>
+        <div id="grid-rota" class="grid-monitor"></div>
     </div>
 
     <div id="v-atend" class="view">
@@ -140,7 +149,10 @@
 </div>
 
 <script>
-    const URL_GAS = "https://script.google.com/macros/s/AKfycbzzhxFNXACMsNhBYRx2RF0iQiCLVrJdyfszDK6OrtLmRSRVuUjk72yZt8v6xcineYlrJA/exec"; 
+    // =========================================================
+    // COLE O SEU NOVO LINK DO GOOGLE APPS SCRIPT AQUI ABAIXO:
+    // =========================================================
+    const URL_GAS = "https://script.google.com/macros/s/AKfycbxxxxxxx/exec"; 
     
     let dados = [];
     let listaClientes = [];
@@ -158,7 +170,7 @@
 
     function esconderLoader() { document.getElementById('loader-overlay').style.display = 'none'; }
 
-    // --- FUNÇÕES DE COMUNICAÇÃO COM O GOOGLE (SEM CORS) ---
+    // --- FUNÇÕES DE COMUNICAÇÃO COM O GOOGLE ---
 
     async function fazerLogin() {
         const u = document.getElementById('user').value.trim();
@@ -200,7 +212,6 @@
         
         mostrarLoader("Enviando solicitação...");
         try {
-            // Sem header de JSON para evitar o bloqueio de CORS do Google
             await fetch(URL_GAS, {
                 method: 'POST', 
                 body: JSON.stringify({
@@ -229,12 +240,9 @@
         if (!confirm(`Iniciar rota e IMPRIMIR etiquetas para ${selecionados.length} itens?`)) return;
         
         mostrarLoader(`Acionando Servidor e Gerando Impressão...`);
-        
-        // Dispara a impressão imediatamente na tela
         imprimirEtiquetas(selecionados);
 
         try {
-            // Envia ordem de saída para o Google (Sem headers CORS)
             await fetch(URL_GAS, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
@@ -258,7 +266,6 @@
         mostrarLoader("Enviando foto para o Drive e dando baixa...");
         
         try {
-            // Envia IDs e Fotos base64 para o Google processar (Sem headers CORS)
             await fetch(URL_GAS, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
@@ -281,7 +288,7 @@
         esconderLoader();
     }
 
-    // --- FUNÇÕES DE LEITURA E RENDERIZAÇÃO ---
+    // --- FUNÇÕES DE LEITURA E RENDERIZAÇÃO (AGORA COM 2 PAINEIS) ---
 
     async function carregarClientes() {
         try {
@@ -303,14 +310,20 @@
     }
 
     function render() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = "";
+        const gridPendente = document.getElementById('grid');
+        const gridRota = document.getElementById('grid-rota');
+        gridPendente.innerHTML = "";
+        gridRota.innerHTML = "";
+        
         if (!dados || dados.length <= 1) return;
 
         const fLimpo = fAtual.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const agora = new Date().getTime();
+        const limite48h = 48 * 60 * 60 * 1000;
         
         dados.slice(1).forEach(row => {
-            if (row[4] !== "Pendente") return;
+            const status = row[4];
+            if (status === "Concluído") return; // Ignora o que já foi baixado
             
             let setorNome = (row[3] || "GERAL").toUpperCase();
             const sLimpo = setorNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -321,23 +334,47 @@
             const nomeExibir = cliente ? cliente.nome : "CLIENTE " + codCli;
 
             const solicitante = row[6] || "Sistema";
-            const isAtrasado = row[7] === true;
-
+            
+            // Tratar Datas para o Card
             const dataSolic = new Date(row[1]);
-            const diaMes = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
-            const horaMin = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            const diaMesSolic = dataSolic.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+            const horaMinSolic = dataSolic.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+            let isAtrasado = false;
+            let dataRodape = `${diaMesSolic} às ${horaMinSolic} (Solicitado)`;
+            let corBordaExtra = "";
+
+            // A Mágica de Separação (Pendente vs Na Rua)
+            if (status === "Pendente") {
+                isAtrasado = row[7] === true; // Atraso de 48h desde a solicitação (vem do Apps Script)
+                
+            } else if (status === "EM_ROTA") {
+                corBordaExtra = "border-left: 8px solid #FF9800;"; // Borda laranja destacada
+                
+                const dataSaidaStr = row[8];
+                if (dataSaidaStr) {
+                    const dataSaida = new Date(dataSaidaStr);
+                    const diaMesSaida = dataSaida.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+                    const horaMinSaida = dataSaida.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+                    dataRodape = `${diaMesSaida} às ${horaMinSaida} (Saiu do Lab)`;
+                    
+                    // Cálculo das 48 horas de atraso do motoboy
+                    if ((agora - dataSaida.getTime()) > limite48h) {
+                        isAtrasado = true;
+                    }
+                }
+            }
 
             let checkboxHtml = "";
-
-            if (usuarioLogadoNivel === "ADMIN") {
+            if (usuarioLogadoNivel === "ADMIN" && status === "Pendente") {
                 checkboxHtml = `
                 <div style="position: absolute; top: 8px; right: 10px; z-index: 10;">
                     <input type="checkbox" class="select-item" value="${row[0]}" style="width: 22px; height: 22px; cursor: pointer; accent-color: #2e7d32;">
                 </div>`;
             }
 
-            grid.innerHTML += `
-                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}">
+            const cardHTML = `
+                <div class="card-p ${isAtrasado ? 'atrasado-48h' : ''}" style="${corBordaExtra}">
                     ${checkboxHtml}
                     <div class="tag ${getCor(sLimpo)}">${setorNome} ${isAtrasado ? '⚠️' : ''}</div>
                     <div style="padding:12px; position:relative;">
@@ -345,13 +382,20 @@
                         <small style="color: #666;">Cód: ${codCli}</small>
                         <div style="margin-top: 10px; color: #007bff; font-weight: bold; font-size: 0.85rem;">👤 ${solicitante}</div>
                         <div style="font-size: 0.8rem; margin: 10px 0; padding: 8px; background: #f1f1f1; border-left: 3px solid #333; border-radius: 4px;">📦 ID Sist: ${row[0]}<br>Pedido: ${row[5]}</div>
-                        <div style="text-align:right; font-size: 0.7rem; color: #888; margin-top: 8px;">${diaMes} às ${horaMin}</div>
+                        <div style="text-align:right; font-size: 0.75rem; color: #888; margin-top: 8px; font-weight: bold;">${dataRodape}</div>
                     </div>
                 </div>`;
+
+            // Joga o cartão pro painel certo!
+            if (status === "Pendente") {
+                gridPendente.innerHTML += cardHTML;
+            } else if (status === "EM_ROTA") {
+                gridRota.innerHTML += cardHTML;
+            }
         });
     }
 
-    // --- IMPRESSÃO TÉRMICA (O GERADOR DE ETIQUETAS) ---
+    // --- IMPRESSÃO TÉRMICA ---
 
     function imprimirEtiquetas(idsSelecionados) {
         let conteudoHTML = '';
@@ -402,7 +446,6 @@
         janelaImpressao.document.close();
         janelaImpressao.focus();
         
-        // Dá um pequeno tempo para o navegador desenhar a etiqueta e chama a impressora
         setTimeout(() => { 
             janelaImpressao.print(); 
             janelaImpressao.close(); 
@@ -491,10 +534,7 @@
         if (!vid.videoWidth) return alert("Câmera desligada ou sem permissão");
         canv.width = vid.videoWidth; canv.height = vid.videoHeight;
         canv.getContext('2d').drawImage(vid, 0, 0);
-        
-        // A compressão da foto que evita o timeout no Google:
         loteFotos.push(canv.toDataURL('image/jpeg', 0.4)); 
-        
         document.getElementById('count-fotos').innerText = loteFotos.length;
     }
 
@@ -532,4 +572,3 @@
 </script>
 </body>
 </html>
-
